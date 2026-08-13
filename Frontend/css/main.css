@@ -1,0 +1,26 @@
+:root{
+    --color-background: #0b0f14;
+    --surface-color: #11171f;
+    --surface-color-hover: #171e27;
+    --border-color: #202933;
+
+    --text-color: #f1f5f9;
+
+    --accent-primary: #22c55e;
+    --accent-primary-hover: #16a34a;
+
+    --status-success: #22c55e;
+    --status-warning: #facc15;
+    --status-danger: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body{
+    margin: 0;
+    padding: 10pt;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 16pt;
+}

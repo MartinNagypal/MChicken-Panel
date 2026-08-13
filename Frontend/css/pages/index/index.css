@@ -1,0 +1,42 @@
+html{
+    background-color: var(--color-background);
+    color: var(--text-color);
+}
+
+#dashboardBody{
+    display: grid;
+    grid-template-columns: 1fr 4fr;
+    gap: 10pt;
+    height: 100vh;
+}
+
+#sidePanel{
+    background-color: var(--surface-color);
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    border-radius: 7.5pt;
+    padding: 10pt;
+}
+
+#sidePanelSiteDataItem{
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
+    font-size: 20pt;
+    padding: 10pt;
+}
+
+#sidePanelOptionsList{
+    list-style: none;
+    padding: 0;
+}
+
+#mainDashboard{
+    background-color: var(--surface-color);
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    border-radius: 7.5pt;
+    padding: 10pt;
+}
