@@ -32,6 +32,17 @@ html{
     padding: 0;
 }
 
+.sidePanelOptionsListElement{
+    display: flex;
+    align-items: center;
+    padding: 10pt;
+    margin-bottom: 15pt;
+    background-color: var(--surface-color-hover);
+    border-radius: 7.5pt;
+    box-shadow: 0 2pt 4pt rgba(0, 0, 0, 0.1);
+    font-size: 14pt;
+}
+
 #mainDashboard{
     background-color: var(--surface-color);
     border-style: solid;

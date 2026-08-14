@@ -18,9 +18,44 @@
     box-sizing: border-box;
 }
 
+html{
+    background-color: var(--color-background);
+    color: var(--text-color);
+}
+
 body{
     margin: 0;
     padding: 10pt;
     font-family: "Space Grotesk", sans-serif;
     font-size: 16pt;
+}
+
+@view-transition{
+    navigation: auto;
+}
+
+::view-transition-group(root){
+    animation-duration: 1s;
+}
+
+::view-transition-old(root){
+    animation-name: slideOut;
+    animation-duration: 1s;
+}
+
+::view-transition-new(root){
+    animation-name: slideIn;
+    animation-duration: 1s;
+}
+
+@keyframes slideOut{
+    to{ 
+        translate: -100vw;
+    }
+}
+
+@keyframes slideIn{
+    from{ 
+        translate: -100vw;
+    }
 }
