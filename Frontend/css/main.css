@@ -30,32 +30,18 @@ body{
     font-size: 16pt;
 }
 
+html{
+    background-color: var(--color-background);
+    color: var(--text-color);
+}
+
+.mainPageBody{
+    display: grid;
+    grid-template-columns: 1fr 4fr;
+    gap: 10pt;
+    height: 100vh;
+}
+
 @view-transition{
     navigation: auto;
-}
-
-::view-transition-group(root){
-    animation-duration: 1s;
-}
-
-::view-transition-old(root){
-    animation-name: slideOut;
-    animation-duration: 1s;
-}
-
-::view-transition-new(root){
-    animation-name: slideIn;
-    animation-duration: 1s;
-}
-
-@keyframes slideOut{
-    to{ 
-        translate: -100vw;
-    }
-}
-
-@keyframes slideIn{
-    from{ 
-        translate: -100vw;
-    }
 }

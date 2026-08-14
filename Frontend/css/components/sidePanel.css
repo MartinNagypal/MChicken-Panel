@@ -1,0 +1,76 @@
+#sidePanel{
+    background-color: var(--surface-color);
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    border-radius: 7.5pt;
+    padding: 10pt;
+
+    display:flex;
+    flex-direction: column;
+}
+
+#sidePanelSiteDataItem{
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
+    font-size: 20pt;
+    padding: 10pt;
+    margin-bottom: 0;
+}
+
+.hrSplitter{
+    width: 90%;
+    border: none;
+    border-top: 1pt solid var(--border-color);
+    border-radius: 5pt;
+    margin-top: 0;
+}
+
+#sidePanelHrTop{
+    margin-bottom: 10pt;
+}
+
+#sidePanelOptionsList{
+    list-style: none;
+    padding: 0;
+}
+
+.sidePanelOptionsListElement{
+    display: flex;
+    align-items: center;
+    padding: 10pt;
+    margin-bottom: 15pt;
+    background-color: var(--surface-color-hover);
+    border-radius: 7.5pt;
+    box-shadow: 0 2pt 4pt rgba(0, 0, 0, 0.1);
+    font-size: 14pt;
+}
+
+.sidePanelOptionsListElement:hover{
+    background-color: var(--surface-color-hover);
+    cursor: pointer;
+}
+
+.sidePanelOptionsListElement:active{
+    transform: scale(0.98);
+}
+
+.sidePanelOptionsListElementActive {
+    view-transition-name: sidePanelOptionsListElementActive;
+
+    border-left-style: solid;
+    border-width: 2pt;
+    border-color: var(--accent-primary);
+    box-shadow: -4px 0 5px -4px var(--accent-primary);
+}
+.sidePanelUserItem{
+    display:flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10pt;
+    margin-top: auto;
+}
+
+

@@ -1,6 +1,0 @@
-.sidePanelOptionsListElementActive {
-    border-left-style: solid;
-    border-width: 2pt;
-    border-color: var(--accent-primary);
-    box-shadow: -4px 0 5px -4px var(--accent-primary);
-}
