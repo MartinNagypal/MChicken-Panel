@@ -13,8 +13,9 @@
 #sidePanelSiteDataItem{
     display:flex;
     flex-direction: row;
-    justify-content: space-between;
-    font-size: 20pt;
+    justify-content: flex-start;
+    gap: 10pt;
+    font-size: 18pt;
     padding: 10pt;
     margin-bottom: 0;
 }
@@ -39,6 +40,8 @@
 .sidePanelOptionsListElement{
     display: flex;
     align-items: center;
+    flex-direction: row;
+    gap: 10pt;
     padding: 10pt;
     margin-bottom: 15pt;
     background-color: var(--surface-color-hover);
@@ -68,6 +71,7 @@
     display:flex;
     flex-direction: row;
     align-items: center;
+    gap: 4pt;
     justify-content: space-between;
     padding: 10pt;
     margin-top: auto;
