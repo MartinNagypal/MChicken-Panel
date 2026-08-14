@@ -77,4 +77,20 @@
     margin-top: auto;
 }
 
+.sidePanelIconActive{
+    color: var(--accent-primary) !important;
+}
+
+#logoutButton{
+    transition: transform 0.2s ease;
+}
+
+#logoutButton:hover{
+    cursor: pointer;
+    transform: scale(1.1);
+}
+
+#logoutButton:active{
+    transform: scale(0.9);
+}
 

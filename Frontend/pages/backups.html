@@ -4,29 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MChicken Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
     <link rel="stylesheet" href="../css/pages/index/index.css">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/components/sidePanel.css">
+    <link rel="stylesheet" href="../css/components/sidePaneloptionsElementActive.css">
     <link rel="stylesheet" href="../css/components/mainPage.css">
     <script src="../js/main.js" defer></script>
 </head>
 <body class="mainPageBody"> 
     <div id="sidePanel">
         <div id="sidePanelSiteDataItem">
-            <span>Logo</span>
-            <span>MChicken Panel</span>
+            <i class="fa-solid fa-gamepad" style="color: var(--accent-primary); font-size: 20pt;"></i>
+            <span><b>MChicken Panel</b></span>
         </div>
+        <hr id="sidePanelHrTop" class="hrSplitter">
         <div id="sidePanelOptionsItem">
             <ul id="sidePanelOptionsList">
-                <li id="dashboardButton" class="sidePanelOptionsListElement"><span>Dashboard</span></li>
-                <li id="backupsButton" class="sidePanelOptionsListElement sidePanelOptionsListElementActive"><span>Backups</span></li>
-                <li id="settingsButton" class="sidePanelOptionsListElement"><span>Settings</span></li>
+                <li id="dashboardButton" class="sidePanelOptionsListElement"><i class="fa-solid fa-gauge" style="color: var(--text-color); font-size: 16pt;"></i><span><b>Dashboard</b></span></li>
+                <li id="backupsButton" class="sidePanelOptionsListElement sidePanelOptionsListElementActive"><i class="fa-solid fa-box-archive sidePanelIconActive" style="color: var(--text-color); font-size: 16pt;"></i><span><b>Backups</b></span></li>
+                <li id="settingsButton" class="sidePanelOptionsListElement"><i class="fa-solid fa-gear" style="color: var(--text-color); font-size: 16pt;"></i><span><b>Settings</b></span></li>
             </ul>
         </div>
-        <div id="sidePanelUserItem"></div>
+        <div class="sidePanelUserItem">
+            <i class="fa-solid fa-circle-user fa-xl " style="color: var(--accent-primary); font-size: 18pt;"></i>
+            <span style="margin-right: auto"><b>Username</b></span>
+            <i class="fa-solid fa-right-from-bracket fa-lg" style="color: var(--status-danger);"></i>
+        </div>
     </div>  
 
-    <div class="mainPage">Page 2</div>
+    <div class="mainPage"> Page 1</div>
     
 </body>
 </html>
