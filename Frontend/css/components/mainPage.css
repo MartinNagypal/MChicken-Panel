@@ -6,6 +6,8 @@
     border-color: var(--border-color);
     border-radius: 7.5pt;
     padding: 15pt;
+    min-height: 0;
+    overflow: hidden;
 
     display: grid;
     grid-template-rows: 1fr auto 4fr;

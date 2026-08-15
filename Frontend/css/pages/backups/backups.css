@@ -1,0 +1,74 @@
+.mainPage{
+    display: grid !important;
+    grid-template-rows: 0.5fr 6fr !important;
+    gap: 15pt !important;
+}
+
+#backupsHeader{
+    display: flex;
+    flex-direction: column;
+    gap: 5pt;
+    padding: 20pt;
+}
+
+#backupsList{
+    display: flex;
+    flex-direction: column;
+    gap: 10pt;
+    padding: 10pt;
+    overflow-y: auto;
+
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    border-radius: 7.5pt;
+    background-color: var(--surface-color);
+}
+
+.backupsListItem{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12.5pt;
+
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    border-radius: 7.5pt;
+    background-color: var(--color-background);
+}
+
+#backupFileName{
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+#backupDate{
+    font-size: 12pt;
+    color: var(--text-color-secondary);
+}
+
+#backupSize{
+    font-size: 12pt;
+    color: var(--text-color-secondary);
+}
+
+#backupRestoreButton{
+    line-height: 1;
+    padding: 5pt 10pt;
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--status-danger);
+    border-radius: 7.5pt;
+    box-shadow: inset 0 0px 4px var(--status-danger);
+    font-size: 12pt;
+    font-weight: bold;
+    cursor: pointer;
+
+    display:flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 5pt;
+}

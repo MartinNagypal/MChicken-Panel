@@ -22,6 +22,7 @@
 html{
     background-color: var(--color-background);
     color: var(--text-color);
+    overflow: hidden;
 }
 
 body{
@@ -29,6 +30,7 @@ body{
     padding: 10pt;
     font-family: "Space Grotesk", sans-serif;
     font-size: 14pt;
+    overflow: hidden;
 }
 
 html{
