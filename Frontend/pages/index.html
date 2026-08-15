@@ -28,12 +28,81 @@
         </div>
         <div class="sidePanelUserItem">
             <i class="fa-solid fa-circle-user fa-xl " style="color: var(--accent-primary); font-size: 18pt;"></i>
-            <span style="margin-right: auto"><b>Username</b></span>
+            <span style="margin-right: auto">Username</span>
             <i class="fa-solid fa-right-from-bracket fa-lg" id="logoutButton" style="color: var(--status-danger);"></i>
         </div>
     </div>  
 
-    <div class="mainPage"> Page 1</div>
+    <div class="mainPage">
+        <div id="mainPageContentServerManager">
+            <div id="serverInfo">
+                <div id="serverInfoHeader">
+                    <span id="serverInfoHeaderName">Server name </span><div id="serverInfoHeaderStatus"> <i class="fa-solid fa-circle fa-xs"></i> <span>Online</span></div>
+                </div>
+                <div id="serverInfoContent">
+                    <span>1.20.1</span>
+                    <span> / </span>
+                    <span>play.chickennuggget.net</span>
+                </div>
+            </div>
+            <div id="serverManagerButtons">
+                <div class="serverManagerButton" id="buttonStartStop"><i class="fa-solid fa-play"></i><span>Start</span></div>
+                <div class="serverManagerButton" id="buttonRestart" ><i class="fa-solid fa-rotate-left"></i><span>Restart</span></div>
+                <div class="serverManagerButton" id="buttonBackup"><i class="fa-solid fa-save"></i><span>Backup</span></div>
+            </div>
+        </div>
+        <div id="mainPageContentServerStats">
+            <div class="serverStat">
+                <div class="serverStatName"><i class="fa-solid fa-users"></i><span>Players</span></div>
+                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
+                <div class="serverStatValue">0/20</div>
+            </div>
+            <div class="serverStat">
+                <div class="serverStatName"><i class="fa-solid fa-tachometer-alt"></i><span>TPS</span></div>
+                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
+                <div class="serverStatValue">0</div>
+            </div>
+            <div class="serverStat">
+                <div class="serverStatName"><i class="fa-solid fa-microchip"></i><span>CPU Usage</span></div>
+                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
+                <div class="serverStatValue">0%</div>
+            </div>
+            <div class="serverStat">
+                <div class="serverStatName"><i class="fa-solid fa-memory"></i><span>RAM Usage</span></div>
+                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
+                <div class="serverStatValue">0%</div>
+            </div>
+            <div class="serverStat">
+                <div class="serverStatName"><i class="fa-solid fa-hdd"></i><span>MAX Ram</span></div>
+                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
+                <div class="serverStatValue">0%</div>
+            </div>
+            <div class="serverStat">
+                <div class="serverStatName"><i class="fa-solid fa-temperature-high"></i><span>CPU Temp</span></div>
+                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
+                <div class="serverStatValue">0°C</div>
+            </div>
+            <div class="serverStat">
+                <div class="serverStatName"><i class="fa-solid fa-clock"></i><span>Uptime</span></div>
+                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
+                <div class="serverStatValue">0h 0m 0s</div>
+            </div>
+            <div class="serverStat">
+                <div class="serverStatName"><i class="fa-solid fa-save"></i><span>Last Backup</span></div>
+                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
+                <div class="serverStatValue">Never</div>
+            </div>
+        </div>
+        <div id="mainPageContentConsole">
+            <div id="consoleHeader"><i class="fa-solid fa-terminal"></i><span>Console</span></div>
+            <div id="consoleTerminal"></div>
+            <div id="consoleInput">
+                <i class="fa-solid fa-angles-right"></i>
+                <input type="text" id="consoleInputField" placeholder="Type a command...">
+                <i class="fa-solid fa-paper-plane"></i>
+            </div>
+        </div>
+    </div>
     
 </body>
 </html>

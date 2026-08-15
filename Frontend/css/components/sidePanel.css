@@ -21,7 +21,7 @@
 }
 
 .hrSplitter{
-    width: 90%;
+    width: 9%;
     border: none;
     border-top: 1pt solid var(--border-color);
     border-radius: 5pt;
@@ -44,10 +44,12 @@
     gap: 10pt;
     padding: 10pt;
     margin-bottom: 15pt;
-    background-color: var(--surface-color-hover);
     border-radius: 7.5pt;
-    box-shadow: 0 2pt 4pt rgba(0, 0, 0, 0.1);
     font-size: 14pt;
+
+    border-bottom-style: solid;
+    border-bottom-width: 1.5pt;
+    border-bottom-color: var(--border-color);
 }
 
 .sidePanelOptionsListElement:hover{
@@ -66,6 +68,8 @@
     border-width: 2pt;
     border-color: var(--accent-primary);
     box-shadow: -4px 0 5px -4px var(--accent-primary);
+    background-color: var(--surface-color-hover);
+    border-bottom-style: none !important;
 }
 .sidePanelUserItem{
     display:flex;
@@ -75,6 +79,7 @@
     justify-content: space-between;
     padding: 10pt;
     margin-top: auto;
+    font-weight: bold;
 }
 
 .sidePanelIconActive{

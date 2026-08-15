@@ -1,0 +1,193 @@
+#mainPageContentServerManager{
+    padding: 10pt;
+
+    display: grid;
+    grid-template-columns: 4fr 3fr;
+}
+
+#serverInfo{
+    display: flex;
+    flex-direction: column;
+    gap: 10pt;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+#serverInfoHeader{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10pt;
+}
+
+#serverInfoHeaderName{
+    font-size: 18pt;
+    font-weight: bold;
+    border-bottom-style: solid;
+    border-bottom-width: 1.25pt;
+    border-bottom-color: var(--border-color);
+    border-radius: 5pt;
+    padding-bottom: 2.5pt;
+}
+
+#serverInfoHeaderStatus{
+    font-size: 10pt;
+    font-weight: bold;
+    color: var(--accent-primary);
+}
+
+#serverInfoContent{
+    font-size: 11pt;
+    color: var(--text-color-secondary);
+    font-weight: bold;
+}
+
+#serverManagerButtons{
+    display: flex;
+    flex-direction: row;
+    gap: 20pt;
+    justify-content: flex-end;
+    align-items: center;
+
+}
+
+.serverManagerButton{
+    padding: 10pt;
+    border-style: solid;
+    border-width: 1.5pt;
+    border-radius: 7.5pt;
+    color: var(--text-color);
+
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 5pt;
+    cursor: pointer;
+}
+
+#buttonStartStop{
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 4pt var(--accent-primary);
+}
+
+#buttonRestart{
+    border-color: orange;
+    box-shadow: 0 0 4pt orange;
+}
+
+#buttonBackup{
+    border-color: orange;
+    box-shadow: 0 0 4pt orange;
+}
+
+#mainPageContentServerStats{
+    display:flex;
+    flex-wrap: wrap;
+    flex: 1;
+    gap: 20pt;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 12pt;
+}
+
+.serverStat{
+    padding: 10pt;
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    border-radius: 7.5pt;
+    background-color: var(--surface-color);
+    flex: 1;
+    min-width: fit-content;
+    max-width: 125pt;
+    min-width: 125pt;
+    transition: transform 0.2s ease;
+}
+
+.serverStat:hover{
+    transform: scale(1.1);
+}
+
+.serverStatName{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10pt;
+    line-height: 1;
+}
+
+.serverStatValue{
+    font-size: 16pt;
+    font-weight: bold;
+    color: var(--accent-primary);
+    padding: 5pt;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#mainPageContentConsole{
+    background-color: var(--surface-color);
+    border-radius: 7.5pt;
+    padding: 15pt;
+
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+
+    display: grid;
+    grid-template-rows: 0.5fr 5fr 0.75fr;
+    gap: 10pt;
+}
+
+#consoleHeader{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 10pt;
+    font-weight: bold;
+    padding-bottom: 0pt;
+}
+
+#consoleTerminal{
+    background-color: var(--surface-color-hover);
+    border-radius: 10pt;
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+}
+
+#consoleInput{
+    background-color: var(--surface-color-hover);
+    border-radius: 7.5pt;
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    padding: 5pt;
+    padding-left: 10pt;
+    padding-right: 10pt;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 5pt;
+}
+
+#consoleInputField{
+    font-size: 11pt;
+    background-color: transparent;
+    border: none;
+    min-height: 100%;
+    color: var(--text-color);
+    flex: 1;
+}
+
+#consoleInputField:focus{
+    outline: none;
+}

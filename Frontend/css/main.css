@@ -5,6 +5,7 @@
     --border-color: #202933;
 
     --text-color: #f1f5f9;
+    --text-color-secondary: #94a3b8;
 
     --accent-primary: #22c55e;
     --accent-primary-hover: #16a34a;
@@ -40,6 +41,10 @@ html{
     grid-template-columns: 1fr 4fr;
     gap: 10pt;
     height: 100vh;
+}
+
+span{
+    line-height: 1;
 }
 
 @view-transition{
