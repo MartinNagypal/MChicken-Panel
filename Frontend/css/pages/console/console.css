@@ -1,0 +1,21 @@
+#consolePageConsole{
+    background-color: var(--surface-color);
+    border-radius: 7.5pt;
+    padding: 15pt;
+
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+
+    display: flex;
+    flex-direction: column;
+    gap: 20pt;
+}
+
+#consoleTerminal{
+    height: 100% !important;
+}
+
+#consoleInput{
+    padding: 10pt !important;
+}

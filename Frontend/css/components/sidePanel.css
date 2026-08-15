@@ -21,7 +21,7 @@
 }
 
 .hrSplitter{
-    width: 9%;
+    width: 90%;
     border: none;
     border-top: 1pt solid var(--border-color);
     border-radius: 5pt;
