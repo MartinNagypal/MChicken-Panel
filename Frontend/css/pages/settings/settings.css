@@ -1,0 +1,38 @@
+.mainPage{
+    display: grid !important;
+    grid-template-rows: 0.5fr 6fr !important;
+    gap: 15pt !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
+}
+
+.settingsContent{
+    display:flex;
+    flex-direction: column;
+    gap: 15pt;
+    overflow-y: auto;
+}
+
+.settingsTab{
+    background-color: var(--surface-color);
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    border-radius: 7.5pt;
+    padding: 15pt;
+    min-height: 0;
+    overflow: hidden;
+
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 15pt;
+    min-height: 250pt;
+}
+
+.settingsTabTitle{
+    font-size: 16pt;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    gap: 10pt;
+}

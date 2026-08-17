@@ -4,13 +4,6 @@
     gap: 15pt !important;
 }
 
-#backupsHeader{
-    display: flex;
-    flex-direction: column;
-    gap: 5pt;
-    padding: 20pt;
-}
-
 #backupsList{
     display: flex;
     flex-direction: column;
