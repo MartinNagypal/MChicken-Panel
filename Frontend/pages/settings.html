@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="../css/components/mainPage.css">
     <link rel="stylesheet" href="../css/components/consoleComponents.css">
     <link rel="stylesheet" href="../css/pages/settings/settings.css">
+    <link rel="stylesheet" href="../css/components/input.css">
     <script src="../js/main.js" defer></script>
 </head>
 <body class="mainPageBody"> 
@@ -44,8 +45,22 @@
         <div class="settingsContent">
             <div class="settingsTab">
                 <div class="settingsTabTitle">Server Setup <hr class="hrSplitter" style="width: 100% !important;"></div>
-                <div>
-                    
+                <div class="serverSetupTabs">
+                    <div class="serverSetupTab">
+                        <span class="serverSetupTabSubtitle">SSH IP / PORT</span>
+                        <div id="sshIpPort">
+                            <input placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
+                            <input placeholder="22" class="mainInputStyle" style="width: 50pt;">
+                        </div>
+                        <span class="serverSetupTabSubtitle">Username</span>
+                        <input placeholder="root" class="mainInputStyle">
+                        <span class="serverSetupTabSubtitle">Password</span>
+                        <input placeholder="password" type="password" class="mainInputStyle">
+                        <span id="serverSetupTabSSHSubmit">Submit</span>
+                    </div>
+                    <div class="serverSetupTab">
+                        server
+                    </div>
                 </div>
             </div>
 
