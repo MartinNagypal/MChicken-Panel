@@ -65,6 +65,19 @@
     justify-content: center;
     gap: 5pt;
     cursor: pointer;
+    transition: all 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.serverManagerButton span{
+    transform: translateY(2.1px);
+}
+
+.serverManagerButton:hover{
+    color: var(--text-color-secondary);
+}
+
+.serverManagerButton:active{
+    transform: scale(0.95);
 }
 
 #buttonStartStop{

@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../css/components/mainPage.css">
     <link rel="stylesheet" href="../css/pages/console/console.css">
     <link rel="stylesheet" href="../css/components/consoleComponents.css">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">  <!-- Added font for console output -->
     <script src="../js/main.js" defer></script>
 </head>
 <body class="mainPageBody"> 
@@ -37,7 +38,9 @@
 
     <div id="consolePageConsole">
         <div id="consoleHeader"><i class="fa-solid fa-terminal"></i><span>Console</span><i id="consoleExpandButton" class="fa-solid fa-angles-left fa-rotate-by consoleIconRotate"></i></div>
-        <div id="consoleTerminal"></div>
+        <div id="consoleTerminal">
+            <textarea id="consoleTerminalOutput" class="consoleOutput"readonly></textarea>
+        </div>
         <div id="consoleInput">
             <i class="fa-solid fa-angles-right"></i>
             <input type="text" id="consoleInputField" placeholder="Type a command...">

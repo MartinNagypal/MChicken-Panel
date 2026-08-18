@@ -14,11 +14,16 @@
 #sidePanelSiteDataItem{
     display:flex;
     flex-direction: row;
+    align-items: center;
     justify-content: flex-start;
     gap: 10pt;
     font-size: 18pt;
     padding: 10pt;
     margin-bottom: 0;
+}
+
+#sidePanelSiteDataItem span{
+    transform: translateY(1.75px);
 }
 
 .hrSplitter{

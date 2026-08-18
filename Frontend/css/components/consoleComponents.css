@@ -60,3 +60,16 @@
 #consoleInputField:focus{
     outline: none;
 }
+
+.consoleOutput{
+    width: 100%;
+    height: 100%;
+    padding: 15pt;
+    background-color: transparent;
+    border: none;
+    color: var(--text-color);
+    font-family: 'VT323', monospace;
+    font-size: 18pt;
+    resize: none;
+    overflow-y: auto;
+}

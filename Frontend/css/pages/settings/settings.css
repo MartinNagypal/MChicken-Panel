@@ -88,4 +88,71 @@
     align-items: center;
     justify-content: center;
     gap: 5pt;
+    transition: all 0.2s ease-in-out;
+}
+
+#serverSetupTabSSHSubmit:hover{
+    background-color: var(--accent-primary);
+    color: var(--color-background);
+}
+
+#serverSetupTabSSHSubmit:active{
+    transform: scale(0.9);
+}
+
+.userSettingsList{
+    display: flex;
+    flex-direction: column;
+    gap: 10pt;
+    max-height: 250pt;
+    overflow-y: auto;
+}
+
+.userSettingsUserItem{
+    padding: 10pt;
+    display: flex;
+    flex-direction: row;
+    gap: 10pt;
+    align-items: center;
+    justify-content: space-between;
+
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--border-color);
+    border-radius: 7.5pt;  
+    background-color: var(--color-background); 
+    font-weight: bold;
+}
+
+.userSettingsUserItem span{
+    line-height: 1;
+    transform: translateY(2px);
+}
+
+.userSettingsUserItemName{
+    display: flex;
+    flex-direction: row;
+    gap: 10pt;
+    align-items: center;
+}
+
+#addUserSpan{
+    display: flex;
+    flex-direction: row;
+    gap: 10pt;
+    align-items: center;
+}
+
+#addUserItem{
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+#addUserItem:hover{
+    background-color: var(--surface-color-hover);
+    color: var(--accent-primary);
+}
+
+#addUserItem:active{
+    transform: scale(0.99);
 }

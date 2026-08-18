@@ -58,15 +58,24 @@
                         <input placeholder="password" type="password" class="mainInputStyle">
                         <span id="serverSetupTabSSHSubmit">Submit</span>
                     </div>
-                    <div class="serverSetupTab">
-                        server
-                    </div>
                 </div>
             </div>
 
             <div class="settingsTab">
                 <div class="settingsTabTitle">Users <hr class="hrSplitter" style="width: 100% !important;"></div>
-                <div>2</div>
+                <div class="userSettingsList">
+                    <div id="addUserItem" class="userSettingsUserItem">
+                        <div id="addUserSpan">
+                            <i class="fa-solid fa-user-plus" style="color: var(--accent-primary);"></i>
+                            <span>Add User</span>
+                        </div>
+                    </div>
+                    <div class="userSettingsUserItem">
+                        <span class="userSettingsUserItemName"><i class="fa-solid fa-circle-user" style="color: var(--accent-primary);"></i><span>Username</span></span>
+                        <span>Role</span>
+                        <i class="fa-solid fa-trash" style="color: var(--status-danger);"></i>
+                    </div>
+                </div>
             </div>
 
         </div>
