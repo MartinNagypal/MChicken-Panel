@@ -1,14 +1,19 @@
 from fastapi import FastAPI, HTTPException
-from Backend/mainApi/services.py import SSHManager
+from ssh import SSH
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 app = FastAPI()
-ssh_manager = SSHManager(
-    host="localhost",
-    port=22,
-    username="user",
-    password="password"
-)
+
+ip = os.getenv("SSH_IP")
+port = os.getenv("SSH_PORT")
+username = os.getenv("SSH_USER")
+password = os.getenv("SSH_PASSWORD")
+
+ssh = SSH(ip, port, username, password)
 
 @app.get("/")
-def root():
-    return {"message": "Hello, World!"}
+async def root():
+    result = await ssh.run("ls -la")
+    return {"ssh": result.stdout.strip()}
