@@ -1,0 +1,11 @@
+.DS_Store
+
+# Python virtual environment
+Backend/env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
