@@ -28,33 +28,13 @@
     border-style: solid;
     border-width: 1.5pt;
     border-color: var(--border-color);
+    overflow: hidden;
+    min-height: 0;
     padding: 15pt;
 
-    display: flex;
+    display:flex;
     flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-}
-
-#consoleContent{
     flex: 1;
-    min-height: 0;
-
-    background-color: transparent;
-    border: none;
-    color: var(--text-color);
-    font-family: 'VT323', monospace;
-    font-size: 15pt;
-    resize: none;
-    overflow-y: auto;
-}
-
-.warnLine{
-    color: var(--accent-warning);
-}
-
-.errorLine{
-    color: var(--accent-error);
 }
 
 #consoleInput{
@@ -63,7 +43,7 @@
     border-style: solid;
     border-width: 1.5pt;
     border-color: var(--border-color);
-    padding: 10pt;
+    padding: 5pt;
     padding-left: 10pt;
     padding-right: 10pt;
 

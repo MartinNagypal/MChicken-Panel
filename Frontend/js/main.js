@@ -36,8 +36,12 @@ socket.onopen = () => {
 }
 
 socket.onmessage = (event) => {
-    terminal.value += event.data + "\n";
-    terminal.scrollTop = terminal.scrollHeight;
+    const console = document.getElementById('consoleContent');
+    const line = document.createElement('div');
+    line.textContent = event.data;
+
+    console.appendChild(line);
+    console.scrollTop = terminal.scrollHeight;
 }
 
 socket.onclose = () => {
