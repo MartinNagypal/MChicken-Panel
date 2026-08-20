@@ -21,8 +21,20 @@ class SSH:
             await self.connect()
         return await self.__connection.run(f'cd {dir} && {command}')
     
+    async def stream(self, command: str):
+        if self.__connection is None:
+            await self.connect()
+
+        process = await self.__connection.create_process(command)
+
+        async for line in process.stdout:
+            yield line.rstrip()
+    
     async def close(self):
         if self.__connection is not None:
             self.__connection.close()
             await self.__connection.wait_closed()
             self.__connection = None
+            
+    async def getIp(self):
+        return self.__ip

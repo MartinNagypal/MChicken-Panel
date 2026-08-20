@@ -28,7 +28,13 @@
     border-style: solid;
     border-width: 1.5pt;
     border-color: var(--border-color);
-    overflow-y: auto;
+    overflow: hidden;
+    min-height: 0;
+    padding: 15pt;
+
+    display:flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 #consoleInput{
@@ -62,14 +68,15 @@
 }
 
 .consoleOutput{
-    width: 100%;
-    height: 100%;
-    padding: 15pt;
+    flex: 1;
+    min-height: 0;
     background-color: transparent;
     border: none;
     color: var(--text-color);
     font-family: 'VT323', monospace;
-    font-size: 18pt;
+    font-size: 15pt;
     resize: none;
     overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }

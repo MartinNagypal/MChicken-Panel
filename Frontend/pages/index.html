@@ -41,16 +41,16 @@
         <div id="mainPageContentServerManager">
             <div id="serverInfo">
                 <div id="serverInfoHeader">
-                    <span id="serverInfoHeaderName">Server name </span><div id="serverInfoHeaderStatus"> <i class="fa-solid fa-circle fa-xs" id="serverStatusIcon"></i> <span id="serverStatus"></span></div>
+                    <span id="serverInfoHeaderName"></span><div id="serverInfoHeaderStatus"> <i class="fa-solid fa-circle fa-xs" id="serverStatusIcon"></i> <span id="serverStatus"></span></div>
                 </div>
                 <div id="serverInfoContent">
-                    <span>1.20.1</span>
+                    <span id="serverVersion"></span>
                     <span> / </span>
-                    <span>play.chickennuggget.net</span>
+                    <span id="serverIp"></span>
                 </div>
             </div>
             <div id="serverManagerButtons">
-                <div class="serverManagerButton" id="buttonStartStop"><i class="fa-solid fa-play"></i><span>Start</span></div>
+                <div class="serverManagerButton" id="buttonStartStop"><i id="buttonStartStopIcon" class="fa-solid fa-play"></i><span id="buttonStartStopSpan">Start</span></div>
                 <div class="serverManagerButton" id="buttonRestart" ><i class="fa-solid fa-rotate-left"></i><span>Restart</span></div>
                 <div class="serverManagerButton" id="buttonBackup"><i class="fa-solid fa-save"></i><span>Backup</span></div>
             </div>
@@ -74,12 +74,12 @@
             <div class="serverStat">
                 <div class="serverStatName"><i class="fa-solid fa-hdd"></i><span>MAX Ram</span></div>
                 <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
-                <div class="serverStatValue">0%</div>
+                <div class="serverStatValue" id="serverStatMaxMem"></div>
             </div>
             <div class="serverStat">
                 <div class="serverStatName"><i class="fa-solid fa-clock"></i><span>Uptime</span></div>
                 <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
-                <div class="serverStatValue">0h 0m 0s</div>
+                <div class="serverStatValue" id="serverStatUptime"></div>
             </div>
             <div class="serverStat">
                 <div class="serverStatName"><i class="fa-solid fa-save"></i><span>Last Backup</span></div>

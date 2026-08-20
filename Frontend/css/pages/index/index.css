@@ -13,6 +13,10 @@
     align-items: flex-start;
 }
 
+.serverInfoHidden{
+    opacity: 0 !important;
+}
+
 #serverInfoHeader{
     display: flex;
     flex-direction: row;
@@ -85,6 +89,11 @@
     box-shadow: 0 0 4pt var(--accent-primary);
 }
 
+.buttonStartStopStop{
+    border-color: var(--status-danger) !important;
+    box-shadow: 0 0 4pt var(--status-danger) !important;
+}
+
 #buttonRestart{
     border-color: orange;
     box-shadow: 0 0 4pt orange;
@@ -155,4 +164,5 @@
     display: grid;
     grid-template-rows: 0.5fr 5fr 0.75fr;
     gap: 10pt;
+
 }
