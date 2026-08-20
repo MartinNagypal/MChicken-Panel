@@ -6,11 +6,10 @@ class RCON:
         self.__ip = ip
         self.__port = int(port)
         self.__password = password
-        
-        
+        self.__client = Client(self.__ip, self.__password, port=self.__port)
+
     async def run(self, command:str):
-        client = Client(self.__ip, self.__password, port=self.__port)
-        await client.connect()
-        result = await client.send_cmd(command)
-        await client.close()
+        await self.__client.connect()
+        result = await self.__client.command(command)
+        await self.__client.close()
         return result

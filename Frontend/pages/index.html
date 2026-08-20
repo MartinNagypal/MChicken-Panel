@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../css/components/consoleComponents.css">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">  <!-- Added font for console output -->
     <script src="../js/main.js" defer></script>
+    <script src="../js/index.js" defer></script>
 </head>
 <body class="mainPageBody"> 
     <div id="sidePanel">
@@ -40,7 +41,7 @@
         <div id="mainPageContentServerManager">
             <div id="serverInfo">
                 <div id="serverInfoHeader">
-                    <span id="serverInfoHeaderName">Server name </span><div id="serverInfoHeaderStatus"> <i class="fa-solid fa-circle fa-xs"></i> <span>Online</span></div>
+                    <span id="serverInfoHeaderName">Server name </span><div id="serverInfoHeaderStatus"> <i class="fa-solid fa-circle fa-xs" id="serverStatusIcon"></i> <span id="serverStatus"></span></div>
                 </div>
                 <div id="serverInfoContent">
                     <span>1.20.1</span>
@@ -58,32 +59,22 @@
             <div class="serverStat">
                 <div class="serverStatName"><i class="fa-solid fa-users"></i><span>Players</span></div>
                 <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
-                <div class="serverStatValue">0/20</div>
-            </div>
-            <div class="serverStat">
-                <div class="serverStatName"><i class="fa-solid fa-tachometer-alt"></i><span>TPS</span></div>
-                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
-                <div class="serverStatValue">0</div>
+                <div class="serverStatValue" id="serverStatPlayers"></div>
             </div>
             <div class="serverStat">
                 <div class="serverStatName"><i class="fa-solid fa-microchip"></i><span>CPU Usage</span></div>
                 <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
-                <div class="serverStatValue">0%</div>
+                <div class="serverStatValue" id="serverStatCPUUsage"></div>
             </div>
             <div class="serverStat">
                 <div class="serverStatName"><i class="fa-solid fa-memory"></i><span>RAM Usage</span></div>
                 <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
-                <div class="serverStatValue">0%</div>
+                <div class="serverStatValue" id="serverStatMemUsage"></div>
             </div>
             <div class="serverStat">
                 <div class="serverStatName"><i class="fa-solid fa-hdd"></i><span>MAX Ram</span></div>
                 <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
                 <div class="serverStatValue">0%</div>
-            </div>
-            <div class="serverStat">
-                <div class="serverStatName"><i class="fa-solid fa-temperature-high"></i><span>CPU Temp</span></div>
-                <hr class="hrSplitter" style="margin: 7.5pt 0pt;">
-                <div class="serverStatValue">0°C</div>
             </div>
             <div class="serverStat">
                 <div class="serverStatName"><i class="fa-solid fa-clock"></i><span>Uptime</span></div>
