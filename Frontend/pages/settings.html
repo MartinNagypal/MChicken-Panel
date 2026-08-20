@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../css/components/consoleComponents.css">
     <link rel="stylesheet" href="../css/pages/settings/settings.css">
     <link rel="stylesheet" href="../css/components/input.css">
+    <script src="../js/settings.js" defer></script>
     <script src="../js/main.js" defer></script>
 </head>
 <body class="mainPageBody"> 
@@ -49,14 +50,26 @@
                     <div class="serverSetupTab">
                         <span class="serverSetupTabSubtitle">SSH IP / PORT</span>
                         <div id="sshIpPort">
-                            <input placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
-                            <input placeholder="22" class="mainInputStyle" style="width: 50pt;">
+                            <input id="sshIp" placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
+                            <input id="sshPort" placeholder="22" class="mainInputStyle" style="width: 50pt;">
                         </div>
                         <span class="serverSetupTabSubtitle">Username</span>
-                        <input placeholder="root" class="mainInputStyle">
+                        <input id="sshUsername" placeholder="root" class="mainInputStyle">
                         <span class="serverSetupTabSubtitle">Password</span>
-                        <input placeholder="password" type="password" class="mainInputStyle">
-                        <span id="serverSetupTabSSHSubmit">Submit</span>
+                        <input id="sshPassword" placeholder="password" type="password" class="mainInputStyle">
+                        <span class="serverSetupSubmit" id="serverSetupTabSSHSubmit">Submit</span>
+                    </div>
+                    <div class="serverSetupTab">
+                        <span class="serverSetupTabSubtitle">RCON IP / PORT</span>
+                        <div id="rconIpPort">
+                            <input placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
+                            <input placeholder="25575" class="mainInputStyle" style="width: 50pt;">
+                        </div>
+                        <span class="serverSetupTabSubtitle">Server Directory</span>
+                        <input placeholder="/path/to/server" class="mainInputStyle">
+                        <span class="serverSetupTabSubtitle">Server Data Directory</span>
+                        <input placeholder="/path/to/server/data" class="mainInputStyle">
+                        <span class="serverSetupSubmit" id="serverSetupTabRCONSubmit">Submit</span>
                     </div>
                 </div>
             </div>

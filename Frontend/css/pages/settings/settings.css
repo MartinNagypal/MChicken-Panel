@@ -71,7 +71,7 @@
     margin-top: 5pt;
 }
 
-#serverSetupTabSSHSubmit{
+.serverSetupSubmit{
     line-height: 1;
     padding: 5pt 10pt;
     margin-top: 10pt;
@@ -91,12 +91,13 @@
     transition: all 0.2s ease-in-out;
 }
 
-#serverSetupTabSSHSubmit:hover{
+.serverSetupSubmit:hover{
     background-color: var(--accent-primary);
     color: var(--color-background);
 }
 
-#serverSetupTabSSHSubmit:active{
+
+.serverSetupSubmit:active{
     transform: scale(0.9);
 }
 

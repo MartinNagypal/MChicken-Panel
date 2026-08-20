@@ -12,5 +12,16 @@
     color: var(--text-color);
     box-sizing: border-box;
     text-align: center;
+    transition: all 0.2s ease-in-out;
 
+}
+
+.mainInputStyle:focus{
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 3pt var(--accent-primary);
+}
+
+.mainInputStyleFalse{
+    border-color: var(--status-danger);
+    box-shadow: 0 0 3pt var(--status-danger);
 }
