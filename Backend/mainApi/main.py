@@ -9,6 +9,8 @@ from contextlib import asynccontextmanager
 import asyncio
 from pydantic import BaseModel
 import models.models as models
+from collections import deque
+from services.sqlite import SQLITE
 
 load_dotenv()
 ip = os.getenv("SSH_IP")
@@ -23,15 +25,45 @@ serverDirectory = "/mnt/serverData/mcDomiCreate/"
 serverFilesDirectory = "/mnt/serverData/mcDomiCreate/data/"
 dockerComposeFile = "docker-compose.yaml"
 
-ssh = SSH(ip, port, username, password)
+sql = SQLITE()
+
+#ssh = SSH(ip, port, username, password)
 rcon: RCON | None = None
+ssh: SSH | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global rcon
-    await ssh.connect()
+    #connections
+    global rcon, ssh
+    await sql.connect()
     rcon = await RCON.create(ip, rconPort, ssh, serverFilesDirectory)
     logTask = asyncio.create_task(watchLogs())
+    
+    #db management
+    await sql.execute("""
+        CREATE TABLE IF NOT EXISTS server(
+            serverId INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip TEXT NOT NULL,
+            port INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL
+        )
+    """)
+    
+    await sql.execute("""
+        CREATE TABLE IF NOT EXISTS systemUser(
+            userId INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
+        )
+    """)
+    
+    result = await sql.fetchone("SELECT * FROM server")
+    if result:
+        ssh = SSH(result[1], result[2], result[3], result[4])
+        await ssh.connect()
+    
     yield
     logTask.cancel()
     try:
@@ -39,6 +71,7 @@ async def lifespan(app: FastAPI):
     except asyncio.CancelledError:
         pass
     
+
     
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
@@ -52,6 +85,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 connectedClients: set[WebSocket] = set()
+logBuffer = deque(maxlen=200)
 
 @app.get("/status")
 async def status():
@@ -155,6 +189,8 @@ async def serverData():
 @app.websocket("/server/logs")
 async def serverLogs(websocket: WebSocket):
     await websocket.accept()
+    for line in logBuffer:
+        await websocket.send_text(line)
     connectedClients.add(websocket)
     try:
         while True:
@@ -165,9 +201,10 @@ async def serverLogs(websocket: WebSocket):
         
 async def watchLogs():
     async for line in ssh.stream(
-        f"tail -n 50 -F {serverFilesDirectory}logs/latest.log"
+        f"tail -n 150 -F {serverFilesDirectory}logs/latest.log"
     ):
         if line:
+            logBuffer.append(line)
             for websocket in connectedClients.copy():
                 await websocket.send_text(line)
                 
@@ -175,8 +212,27 @@ async def watchLogs():
 async def sendCommand(command:models.commandInput):
     try:
         await rcon.updateRconPassword()
-        return await rcon.run(command.command)
+        response = await rcon.run(command.command)
+        logBuffer.append(response)
+        return response
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-                
+@app.post("/server/sshConfig")
+async def sshConfig(sshConfig: models.sshConfig):
+    try:
+        testSSH = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
+        try:
+            await testSSH.connect()
+            await testSSH.close()
+            result = await sql.fetchone("SELECT * FROM server WHERE ip = ? AND port = ?", (sshConfig.ip, sshConfig.port))
+            if result:
+                await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, sshConfig.password, sshConfig.ip, sshConfig.port))
+            else:
+                await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password))
+                return {"message": "SSH configuration saved successfully."}
+        except Exception as e:
+            return {"error": f"Failed to connect to SSH server: {str(e)}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
