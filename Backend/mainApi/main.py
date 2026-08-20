@@ -36,7 +36,6 @@ async def lifespan(app: FastAPI):
     #connections
     global rcon, ssh
     await sql.connect()
-    rcon = await RCON.create(ip, rconPort, ssh, serverFilesDirectory)
     logTask = asyncio.create_task(watchLogs())
     
     #db management
@@ -63,6 +62,7 @@ async def lifespan(app: FastAPI):
     if result:
         ssh = SSH(result[1], result[2], result[3], result[4])
         await ssh.connect()
+        rcon = await RCON.create(ip, rconPort, ssh, serverFilesDirectory)
     
     yield
     logTask.cancel()
@@ -89,6 +89,8 @@ logBuffer = deque(maxlen=200)
 
 @app.get("/status")
 async def status():
+    if(ssh is None):
+        return {"status": "offline"}
     try:
         result = await ssh.run(f'docker ps | grep {dockerContainerName}')
         if 'healthy' in result.stdout:
@@ -105,6 +107,8 @@ async def status():
     
 @app.get("/stats")
 async def stats():
+    if(ssh is None):
+        return {"status": "offline"}
     try:
         await rcon.updateRconPassword()
         playerCount = await rcon.run("list")
@@ -148,6 +152,8 @@ async def stats():
 
 @app.get("/server/startstop")
 async def serverStartStop():
+    if(ssh is None):
+        return {"status": "offline"}
     try:
         status = await ssh.run(f'docker ps | grep {dockerContainerName}')
         if 'healthy' in status.stdout:
@@ -161,6 +167,8 @@ async def serverStartStop():
 
 @app.get("/server/restart")
 async def serverRestart():
+    if(ssh is None):
+        return {"status": "offline"}
     try:
         await ssh.runInDir(serverDirectory, f'docker restart {dockerContainerName}')
         return {"message": "Server restart command executed successfully."}
@@ -169,6 +177,8 @@ async def serverRestart():
 
 @app.get("/server/data")
 async def serverData():
+    if(ssh is None):
+        return {"status": "offline"}
     try:
         serverNameResult = await ssh.runInDir(serverDirectory, f'cat {dockerComposeFile} | grep container_name')
         serverNameMatch = re.search(r"container_name:\s*([a-zA-Z0-9_-]+)", serverNameResult.stdout)
@@ -188,6 +198,9 @@ async def serverData():
     
 @app.websocket("/server/logs")
 async def serverLogs(websocket: WebSocket):
+    if(ssh is None):
+        await websocket.send_text("SSH connection is not established.")
+        return
     await websocket.accept()
     for line in logBuffer:
         await websocket.send_text(line)
@@ -210,6 +223,8 @@ async def watchLogs():
                 
 @app.post("/server/sendCommand")
 async def sendCommand(command:models.commandInput):
+    if(ssh is None):
+        return {"status": "offline"}
     try:
         await rcon.updateRconPassword()
         response = await rcon.run(command.command)
