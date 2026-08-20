@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import re
 from contextlib import asynccontextmanager
 import asyncio
+from pydantic import BaseModel
+import models.models as models
 
 load_dotenv()
 ip = os.getenv("SSH_IP")
@@ -168,3 +170,13 @@ async def watchLogs():
         if line:
             for websocket in connectedClients.copy():
                 await websocket.send_text(line)
+                
+@app.post("/server/sendCommand")
+async def sendCommand(command:models.commandInput):
+    try:
+        await rcon.updateRconPassword()
+        return await rcon.run(command.command)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+                
