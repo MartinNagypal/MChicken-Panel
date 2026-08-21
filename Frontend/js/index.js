@@ -53,11 +53,20 @@ async function fetchServerData() {
     try {
         const response = await fetch('http://127.0.0.1:8000/server/data');
         const data = await response.json();
-        document.getElementById('serverInfoHeaderName').textContent = data.serverName;
-        document.getElementById('serverVersion').textContent = data.serverVersion;
-        document.getElementById('serverIp').textContent = data.ip;
-        await fetchServerStatus();
-        document.getElementById('serverInfo').classList.remove('serverInfoHidden');
+        if(data.ip){
+            document.getElementById('serverInfoHeaderName').textContent = data.serverName;
+            document.getElementById('serverVersion').textContent = data.serverVersion;
+            document.getElementById('serverIp').textContent = data.ip;
+            await fetchServerStatus();
+            document.getElementById('serverInfo').classList.remove('serverInfoHidden');
+        }
+        else{
+            document.getElementById('serverInfoHeaderName').textContent = "No Server Found";
+            document.getElementById('serverVersion').textContent = "N/A";
+            document.getElementById('serverIp').textContent = "N/A";
+            document.getElementById('serverInfo').classList.remove('serverInfoHidden');
+        }
+
     }
     catch (error) {
         console.error('Error fetching server data:', error);

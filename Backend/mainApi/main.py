@@ -27,16 +27,16 @@ dockerComposeFile = "docker-compose.yaml"
 
 sql = SQLITE()
 
-#ssh = SSH(ip, port, username, password)
 rcon: RCON | None = None
 ssh: SSH | None = None
+logTask: asyncio.Task | None = None
+logTaskLock = asyncio.Lock()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     #connections
     global rcon, ssh
     await sql.connect()
-    logTask = asyncio.create_task(watchLogs())
     
     #db management
     await sql.execute("""
@@ -63,6 +63,8 @@ async def lifespan(app: FastAPI):
         ssh = SSH(result[1], result[2], result[3], result[4])
         await ssh.connect()
         rcon = await RCON.create(ip, rconPort, ssh, serverFilesDirectory)
+        await startLogWatcher()
+        
     
     yield
     logTask.cancel()
@@ -72,7 +74,6 @@ async def lifespan(app: FastAPI):
         pass
     
 
-    
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
@@ -84,13 +85,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 connectedClients: set[WebSocket] = set()
 logBuffer = deque(maxlen=200)
 
 @app.get("/status")
 async def status():
     if(ssh is None):
-        return {"status": "offline"}
+        return {"status": "not configured"}
     try:
         result = await ssh.run(f'docker ps | grep {dockerContainerName}')
         if 'healthy' in result.stdout:
@@ -108,7 +110,7 @@ async def status():
 @app.get("/stats")
 async def stats():
     if(ssh is None):
-        return {"status": "offline"}
+        return {"status": "not configured"}
     try:
         await rcon.updateRconPassword()
         playerCount = await rcon.run("list")
@@ -153,7 +155,7 @@ async def stats():
 @app.get("/server/startstop")
 async def serverStartStop():
     if(ssh is None):
-        return {"status": "offline"}
+        return {"status": "not configured"}
     try:
         status = await ssh.run(f'docker ps | grep {dockerContainerName}')
         if 'healthy' in status.stdout:
@@ -168,7 +170,7 @@ async def serverStartStop():
 @app.get("/server/restart")
 async def serverRestart():
     if(ssh is None):
-        return {"status": "offline"}
+        return {"status": "not configured"}
     try:
         await ssh.runInDir(serverDirectory, f'docker restart {dockerContainerName}')
         return {"message": "Server restart command executed successfully."}
@@ -178,7 +180,7 @@ async def serverRestart():
 @app.get("/server/data")
 async def serverData():
     if(ssh is None):
-        return {"status": "offline"}
+        return {"status": "not configured"}
     try:
         serverNameResult = await ssh.runInDir(serverDirectory, f'cat {dockerComposeFile} | grep container_name')
         serverNameMatch = re.search(r"container_name:\s*([a-zA-Z0-9_-]+)", serverNameResult.stdout)
@@ -198,10 +200,11 @@ async def serverData():
     
 @app.websocket("/server/logs")
 async def serverLogs(websocket: WebSocket):
-    if(ssh is None):
-        await websocket.send_text("SSH connection is not established.")
-        return
     await websocket.accept()
+    if(ssh is None):
+        await websocket.send_text("SSH not configured")
+        return
+    
     for line in logBuffer:
         await websocket.send_text(line)
     connectedClients.add(websocket)
@@ -213,6 +216,8 @@ async def serverLogs(websocket: WebSocket):
         connectedClients.discard(websocket)
         
 async def watchLogs():
+    if(ssh is None):
+        return
     async for line in ssh.stream(
         f"tail -n 150 -F {serverFilesDirectory}logs/latest.log"
     ):
@@ -220,11 +225,35 @@ async def watchLogs():
             logBuffer.append(line)
             for websocket in connectedClients.copy():
                 await websocket.send_text(line)
+   
+async def stopLogWatcher():
+    global logTask
+    if logTask is None:
+        return
+    logTask.cancel()
+    try:
+        await logTask
+    except asyncio.CancelledError:
+        pass
+    finally:
+        logTask = None
+    
+async def startLogWatcher():
+    global logTask
+    if ssh is None:
+        return
+    if logTask is None or logTask.done():
+        logTask = asyncio.create_task(watchLogs())
+        
+async def restartLogWatcher():
+    async with logTaskLock:
+        await stopLogWatcher()
+        await startLogWatcher()
                 
 @app.post("/server/sendCommand")
 async def sendCommand(command:models.commandInput):
     if(ssh is None):
-        return {"status": "offline"}
+        return {"status": "not configured"}
     try:
         await rcon.updateRconPassword()
         response = await rcon.run(command.command)
@@ -245,8 +274,18 @@ async def sshConfig(sshConfig: models.sshConfig):
             if result:
                 await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, sshConfig.password, sshConfig.ip, sshConfig.port))
             else:
-                await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password))
-                return {"message": "SSH configuration saved successfully."}
+                try:
+                    await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password))
+                    global ssh, rcon
+                    ssh = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
+                    await ssh.connect()
+                    rcon = await RCON.create(sshConfig.ip, rconPort, ssh, serverFilesDirectory)
+                    await restartLogWatcher()
+                    return {"message": "SSH configuration saved successfully."}
+                except Exception as e:
+                    return {"error": f"Failed to save SSH configuration: {str(e)}"}
+                    
+
         except Exception as e:
             return {"error": f"Failed to connect to SSH server: {str(e)}"}
     except Exception as e:
