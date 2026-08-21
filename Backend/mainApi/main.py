@@ -11,6 +11,7 @@ from pydantic import BaseModel
 import models.models as models
 from collections import deque
 from services.sqlite import SQLITE
+from services.encryption import Encryption
 
 load_dotenv()
 ip = os.getenv("SSH_IP")
@@ -26,6 +27,8 @@ serverFilesDirectory = "/mnt/serverData/mcDomiCreate/data/"
 dockerComposeFile = "docker-compose.yaml"
 
 sql = SQLITE()
+encryption_key = os.getenv("ENCRYPTION_KEY").encode()
+encryption = Encryption(encryption_key)
 
 rcon: RCON | None = None
 ssh: SSH | None = None
@@ -60,7 +63,7 @@ async def lifespan(app: FastAPI):
     
     result = await sql.fetchone("SELECT * FROM server")
     if result:
-        ssh = SSH(result[1], result[2], result[3], result[4])
+        ssh = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
         await ssh.connect()
         rcon = await RCON.create(ip, rconPort, ssh, serverFilesDirectory)
         await startLogWatcher()
@@ -272,10 +275,10 @@ async def sshConfig(sshConfig: models.sshConfig):
             await testSSH.close()
             result = await sql.fetchone("SELECT * FROM server WHERE ip = ? AND port = ?", (sshConfig.ip, sshConfig.port))
             if result:
-                await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, sshConfig.password, sshConfig.ip, sshConfig.port))
+                await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, encryption.encryptSecret(sshConfig.password), sshConfig.ip, sshConfig.port))
             else:
                 try:
-                    await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password))
+                    await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, encryption.encryptSecret(sshConfig.password)))
                     global ssh, rcon
                     ssh = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
                     await ssh.connect()
