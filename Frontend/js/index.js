@@ -46,6 +46,9 @@ async function fetchServerStatus() {
     }
     catch (error) {
         console.error('Error fetching server status:', error);
+        document.getElementById('serverStatus').textContent = 'Error';
+        document.getElementById('serverStatus').style.color = 'var(--status-danger)';
+        document.getElementById('serverStatusIcon').style.color = 'var(--status-danger)';
     }
 }
 
@@ -69,7 +72,11 @@ async function fetchServerData() {
 
     }
     catch (error) {
-        console.error('Error fetching server data:', error);
+        console.error('Error fetching server data:', error);            
+        document.getElementById('serverInfoHeaderName').textContent = "No Connection to Backend";
+        document.getElementById('serverVersion').textContent = "N/A";
+        document.getElementById('serverIp').textContent = "N/A";
+        document.getElementById('serverInfo').classList.remove('serverInfoHidden');
     }
 }
 

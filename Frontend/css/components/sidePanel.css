@@ -26,14 +26,6 @@
     transform: translateY(1.75px);
 }
 
-.hrSplitter{
-    width: 90%;
-    border: none;
-    border-top: 1pt solid var(--border-color);
-    border-radius: 5pt;
-    margin-top: 0;
-}
-
 #sidePanelHrTop{
     margin-bottom: 10pt;
 }

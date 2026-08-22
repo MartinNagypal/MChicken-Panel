@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MChicken Panel Auth</title>
+    <link rel="stylesheet" href="../css/pages/auth/auth.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components/input.css">
+    <script src="../js/auth.js" defer></script>
+</head>
+<body class="authBody">
+    <div class="authContainer">
+        <div id="appName">MChicken Panel</div>
+        <img src="../assets/logo.png" alt="MChicken Panel Logo" id="appLogo">
+        <hr class="hrSplitter" style="width: 100% !important;">
+        <div class="authInputLabel">Username</div>
+        <input type="text" id="usernameInput" class="mainInputStyle" placeholder="Enter your username">
+        <div class="authInputLabel">Password</div>
+        <input type="password" id="passwordInput" class="mainInputStyle" placeholder="Password">
+        <div class="authButton" id="authLoginButton">Login</div>
+        <div class="authButton" id="authRegisterButton">Register</div>
+        <div class="authRegisterForm authRegisterFormHidden" id="authRegisterForm">
+            <hr style="width: 100% !important;">
+            <div class="authInputLabel">Confirm Password</div>
+            <input type="password" id="registerConfirmPasswordInput" class="mainInputStyle" placeholder="Confirm your password">
+            <div class="authButton" id="authConfirmButton">Confirm</div>
+        </div>
+    </div>
+</body>
+</html>

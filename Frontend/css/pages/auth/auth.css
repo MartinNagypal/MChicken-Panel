@@ -1,0 +1,115 @@
+.authBody{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.authContainer{
+    border-radius: 10px;
+    border: 1.5pt solid var(--border-color);
+    padding: 50px;
+
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10pt;
+    padding-left: 100pt;
+    padding-right: 100pt;
+}
+
+#appName{
+    font-size: 20pt;
+    font-weight: bold;
+    color: var(--accent-primary);
+}
+
+#appLogo{
+    width: 150px;
+}
+
+.authInputLabel{
+    font-size: 13pt;
+    font-weight: bold;
+}
+
+.authButton{
+    width: 100%;
+    padding: 10pt;
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 1.5pt;
+    border-radius: 7.5pt;
+    font-weight: bold;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+#authLoginButton{
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--color-background);
+    margin-top: 10pt;
+}
+
+#authRegisterButton{
+    background-color: var(--color-background);
+    border-color: var(--status-warning);
+    color: var(--status-warning);
+}
+
+.authRegisterForm{
+    opacity: 0;
+    height: 0;
+    transform: translateY(20pt);
+    z-index: -1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10pt;
+    transition: all 1s ease;
+}
+
+.authRegisterFormActive{
+    opacity: 100;
+    transform: translateY(0);
+    z-index: 0;
+    height: auto;
+}
+
+#authConfirmButton{
+    background-color: var(--color-background);
+    border-color: var(--accent-primary);
+    color: var(--text-color);
+    margin-top: 10pt;
+}
+
+.authButton:hover{
+    cursor: pointer;
+    transform: translateX(5pt);
+}
+
+.authButton:active{
+    transform: translateX(0pt);
+}
+
+.authButtonHidden{
+    display: none;
+}
+
+.authInputError{
+    border-color: var(--status-danger) !important;
+}
+
+.authInputSuccess{
+    border-color: var(--status-success) !important;
+}
