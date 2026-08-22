@@ -48,10 +48,9 @@ authLoginButton.addEventListener("click", async () => {
             })
         })
         const data = await result.json();
-        console.log(data);
-        if(data.error){
+        if(data.status_code != 200){
             document.getElementById("authContainer").classList.add("authContainerRed");
-            await showErrorMessage(data.error);
+            await showErrorMessage(data.detail);
         }
         else{
             document.getElementById("authContainer").classList.remove("authContainerRed");
@@ -136,9 +135,9 @@ authConfirmButton.addEventListener("click", async () => {
                 })
             });
             const data = await result.json();
-            if(data.error){
+            if(data.status_code != 200){
                 document.getElementById("authContainer").classList.add("authContainerRed");
-                await showErrorMessage(data.error);
+                await showErrorMessage(data.detail);
             }
             else{
                 document.getElementById("authContainer").classList.add("authContainerGreen");

@@ -35,6 +35,7 @@ serverSetupTabSSHSubmit.addEventListener("click", async () => {
     if(ip && port && username && password) {
         response = await fetch('http://127.0.0.1:8000/server/sshConfig', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },

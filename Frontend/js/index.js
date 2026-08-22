@@ -2,9 +2,16 @@
 buttonStartStop = document.getElementById('buttonStartStop');
 buttonRestart = document.getElementById('buttonRestart');
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function fetchServerStatus() {
     try{
-        const response = await fetch('http://127.0.0.1:8000/status');
+        const response = await fetch('http://127.0.0.1:8000/status', {
+            method: 'GET',
+            credentials: 'include'
+        });
         const data = await response.json();
         if(data.status === 'healthy') {
             document.getElementById('serverStatus').textContent = 'Online';
@@ -54,7 +61,10 @@ async function fetchServerStatus() {
 
 async function fetchServerData() {
     try {
-        const response = await fetch('http://127.0.0.1:8000/server/data');
+        const response = await fetch('http://127.0.0.1:8000/server/data', {
+            method: 'GET',
+            credentials: 'include'
+        });
         const data = await response.json();
         if(data.ip){
             document.getElementById('serverInfoHeaderName').textContent = data.serverName;
@@ -82,7 +92,10 @@ async function fetchServerData() {
 
 async function fetchServerStats() {
     try {
-        const response = await fetch('http://127.0.0.1:8000/stats');
+        const response = await fetch('http://127.0.0.1:8000/stats', {
+            method: 'GET',
+            credentials: 'include'
+        });
         const data = await response.json();
         if(data.detail) {
             document.getElementById('serverStatPlayers').textContent = "None";
@@ -113,7 +126,10 @@ fetchServerData();
 
 buttonRestart.addEventListener('click', async() => {
     try {
-        const response = await fetch('http://127.0.0.1:8000/server/restart');
+        const response = await fetch('http://127.0.0.1:8000/server/restart', {
+            method: 'GET',
+            credentials: 'include'
+        });
         const data = await response.json();
         await fetchServerStatus();
     } catch (error) {
@@ -123,7 +139,10 @@ buttonRestart.addEventListener('click', async() => {
 
 buttonStartStop.addEventListener('click', async() => {
     try {
-        const response = await fetch('http://127.0.0.1:8000/server/startstop');
+        const response = await fetch('http://127.0.0.1:8000/server/startstop', {
+            method: 'GET',
+            credentials: 'include'
+        });
         const data = await response.json();
         await fetchServerStatus();
     } catch (error) {

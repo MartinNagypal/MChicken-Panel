@@ -89,11 +89,11 @@ class AUTH:
                     sessionToken = session.get("sessionToken")
                     return {"message": "Login successful.", "sessionToken": sessionToken, "sessionExpirationHours": self.__sessionExpirationHours}
                 else:
-                    return {"error": "Invalid password."}
+                    return {"error": "Invalid password.", "statusCode": 401}
             else:
-                return {"error": "User not found."}
+                return {"error": "User not found.", "statusCode": 401}
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": str(e), "statusCode": 500}
         
     async def logout(self, sessionToken: str):
         try:
@@ -101,3 +101,14 @@ class AUTH:
             return {"message": "Logged out successfully."}
         except Exception as e:
             return {"error": str(e)}
+        
+    async def isFirstUser(self):
+        doesTableExist = await self.__db.exists("systemUser")
+        if doesTableExist == True:
+            result = await self.__db.fetchone("SELECT * FROM systemUser LIMIT 1")
+            if result:
+                return False
+            else:
+                return True
+        else:
+            return True

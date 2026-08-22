@@ -7,6 +7,39 @@ const terminal = document.getElementById('consoleTerminalOutput');
 const consoleInputSendButton = document.getElementById('consoleInputSendButton');
 const logoutButton = document.getElementById("logoutButton");
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function checkAuthStatus(){
+    try{
+        result = await fetch("http://127.0.0.1:8000/verifySession", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        const data = await result.json();
+        console.log(data);
+        if(data.status_code != 200){
+            window.location.href = "../pages/auth.html";
+        }
+    }
+    catch (error) {
+        console.error("Error checking authentication status:", error);
+    }
+}
+
+async function checkAuthEvery30Seconds(){
+    while(true){
+        await checkAuthStatus();
+        await sleep(30000);
+    }
+}
+
+checkAuthEvery30Seconds();
+
 const errorWords = [
     "Error",
     "ERROR",
@@ -151,6 +184,7 @@ async function sendConsoleInput() {
     const command = inputField.value;
     result = await fetch("http://127.0.0.1:8000/server/sendCommand", {
         method: "POST",
+        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
