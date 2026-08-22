@@ -122,3 +122,37 @@
 .authInputSuccess{
     border-color: var(--status-success) !important;
 }
+
+.authError{
+    border: 1.5pt solid var(--status-danger);
+    border-radius: 7.5pt;
+    padding: 6pt;
+    margin-top: 10pt;
+    width: 100%;
+    font-size: 12pt;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5pt;
+    transition: all 0.3s ease;
+    transform: translateY(0pt);
+}
+
+.authError i{
+    color: var(--status-danger);
+}
+
+.authError span{
+    transform: translateY(1pt);
+    color: var(--text-color);
+}
+
+.authError.hidden{
+    opacity: 0;
+    visibility: hidden;
+    max-height: 0;
+    padding: 0;
+    border: none;
+    transform: translateY(-10pt);
+}

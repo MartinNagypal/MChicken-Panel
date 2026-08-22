@@ -16,7 +16,7 @@ class AUTH:
             )
         """)
         
-        encryptedPassword = self.__encryption.encryptSecret(password)
+        encryptedPassword = self.__encryption.hashPassword(password)
         isFirstUser = await self.__db.fetchone("SELECT * FROM systemUser LIMIT 1")
         if not isFirstUser:
             role = "admin"
@@ -61,5 +61,43 @@ class AUTH:
             else:
                 return {"error": "User not found."}
             
+        except Exception as e:
+            return {"error": str(e)}
+        
+    async def verifySession(self, sessionToken: str):
+        try:
+            session = await self.__db.fetchone("SELECT * FROM userSession WHERE sessionToken = ?", (sessionToken,))
+            if session:
+                sessionExpiresAt = session[5]
+                if datetime.now(timezone.utc) < datetime.fromisoformat(sessionExpiresAt):
+                    return {"valid": True, "username": session[1]}
+                else:
+                    await self.__db.execute("DELETE FROM userSession WHERE sessionToken = ?", (sessionToken,))
+                    return {"valid": False, "error": "Session expired."}
+            else:
+                return {"valid": False, "error": "Session not found."}
+        except Exception as e:
+            return {"valid": False, "error": str(e)}
+        
+    async def login(self, username: str, password: str):
+        try:
+            user = await self.__db.fetchone("SELECT * FROM systemUser WHERE username = ?", (username,))
+            if user:
+                hashedPassword = user[2]
+                if self.__encryption.verifyPassword(password, hashedPassword):
+                    session = await self.createSession(username)
+                    sessionToken = session.get("sessionToken")
+                    return {"message": "Login successful.", "sessionToken": sessionToken, "sessionExpirationHours": self.__sessionExpirationHours}
+                else:
+                    return {"error": "Invalid password."}
+            else:
+                return {"error": "User not found."}
+        except Exception as e:
+            return {"error": str(e)}
+        
+    async def logout(self, sessionToken: str):
+        try:
+            await self.__db.execute("DELETE FROM userSession WHERE sessionToken = ?", (sessionToken,))
+            return {"message": "Logged out successfully."}
         except Exception as e:
             return {"error": str(e)}

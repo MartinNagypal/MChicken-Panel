@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MChicken Panel Auth</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
     <link rel="stylesheet" href="../css/pages/auth/auth.css">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/components/input.css">
@@ -25,6 +26,10 @@
             <div class="authInputLabel">Confirm Password</div>
             <input type="password" id="registerConfirmPasswordInput" class="mainInputStyle" placeholder="Confirm your password">
             <div class="authButton" id="authConfirmButton">Confirm</div>
+        </div>
+        <div id="authError" class="authError hidden">
+            <i class="fa-solid fa-circle-info"></i>
+            <span id="authErrorText"></span>
         </div>
     </div>
 </body>

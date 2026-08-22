@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Response, Cookie
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Response, Cookie, Request
 from fastapi.middleware.cors import CORSMiddleware
 from services.ssh import SSH
 from services.rcon import RCON
@@ -91,20 +91,78 @@ logBuffer = deque(maxlen=200)
 @app.post("/register")
 async def register(user: models.userInput, response: Response):
     result = await auth.register(user.username, user.password)
+    if result.get("message"):
+        sessionToken = result.get("sessionToken")
+        sessionExpirationHours = result.get("sessionExpirationHours")
+        response.set_cookie(
+            key="sessionToken",
+            value=sessionToken,
+            httponly=True,
+            secure=secureCookie,
+            samesite="lax",
+            max_age=sessionExpirationHours * 3600,
+            path="/",
+        )
+        return {
+            "message": result.get("message"),
+        }
+    else:
+        return {
+            "error": result.get("error"),
+        }
+    
+@app.post("/login")
+async def login(user: models.userInput, request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    if currentSessionToken:
+        return {"error": "Already logged in."}
+    result = await auth.login(user.username, user.password)
+    if result.get("error"):
+        return {
+            "error": result.get("error"),
+        }
     sessionToken = result.get("sessionToken")
-    sessionExpirationHours = result.get("sessionExpirationHours")
-    response.set_cookie(
-        key="sessionToken",
-        value=sessionToken,
-        httponly=True,
-        secure=secureCookie,
-        samesite="lax",
-        max_age=sessionExpirationHours * 3600,
-        path="/",
-    )
-    return {
-        "message": result.get("message"),
-    }
+    if sessionToken:
+        sessionExpirationHours = result.get("sessionExpirationHours")
+        response.set_cookie(
+            key="sessionToken",
+            value=sessionToken,
+            httponly=True,
+            secure=secureCookie,
+            samesite="lax",
+            max_age=sessionExpirationHours * 3600,
+            path="/",
+        )
+        return {
+            "message": result.get("message"),
+        }
+    else:
+        return {
+            "error": result.get("error"),
+        }
+    
+@app.get("/verifySession")
+async def verifySession(request: Request):
+    currentSessionToken = request.cookies.get("sessionToken")
+    if not currentSessionToken:
+        return {"error": "No session token provided."}
+    
+    isValid = await auth.verifySession(currentSessionToken)
+    print(isValid)
+    if isValid:
+        return{"valid": True}
+    else:
+        return{"valid": False, "error": isValid.get("error")}
+    
+@app.post("/logout")
+async def logout(request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    if not currentSessionToken:
+        return {"error": "No session token provided."}
+    
+    result = await auth.logout(currentSessionToken)
+    response.delete_cookie("sessionToken", path="/")
+    return result
 
 @app.get("/status")
 async def status():

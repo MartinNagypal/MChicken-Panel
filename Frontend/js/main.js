@@ -5,6 +5,7 @@ const settingsButton = document.getElementById("settingsButton");
 const consoleExpandButton = document.getElementById("consoleExpandButton");
 const terminal = document.getElementById('consoleTerminalOutput');
 const consoleInputSendButton = document.getElementById('consoleInputSendButton');
+const logoutButton = document.getElementById("logoutButton");
 
 const errorWords = [
     "Error",
@@ -189,5 +190,19 @@ function checkLineStatus(lineString, lineObject) {
 document.addEventListener("keydown", async (event) => {
     if (event.key === "Enter") {
         await sendConsoleInput();
+    }
+});
+
+logoutButton.addEventListener("click", async () => {
+    result = await fetch("http://127.0.0.1:8000/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+    const data = await result.json();
+    if(data.message){
+        window.location.href = "../pages/auth.html";
     }
 });
