@@ -8,3 +8,7 @@ class sshConfig(BaseModel):
     port: int
     username: str
     password: str
+    
+class userInput(BaseModel):
+    username: str
+    password: str

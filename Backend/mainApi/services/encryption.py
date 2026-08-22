@@ -1,6 +1,7 @@
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError
 from cryptography.fernet import Fernet
+import secrets
 
 class Encryption:
     def __init__(self, key: bytes):
@@ -21,3 +22,6 @@ class Encryption:
         
     def decryptSecret(self, encryptedSecret: str) -> str:
         return self.__fernet.decrypt(encryptedSecret.encode()).decode()
+    
+    def generateSessionToken(self) -> str:
+        return secrets.token_urlsafe(32)

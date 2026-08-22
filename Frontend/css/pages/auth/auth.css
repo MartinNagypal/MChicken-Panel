@@ -20,6 +20,15 @@
     gap: 10pt;
     padding-left: 100pt;
     padding-right: 100pt;
+    transition: all 0.3s ease;
+}
+
+.authContainerGreen{
+    border-color: var(--accent-primary);
+}
+
+.authContainerRed{
+    border-color: var(--status-danger);
 }
 
 #appName{

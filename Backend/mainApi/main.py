@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Response, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from services.ssh import SSH
 from services.rcon import RCON
@@ -12,6 +12,7 @@ import models.models as models
 from collections import deque
 from services.sqlite import SQLITE
 from services.encryption import Encryption
+from services.auth import AUTH
 
 load_dotenv()
 ip = os.getenv("SSH_IP")
@@ -29,6 +30,7 @@ dockerComposeFile = "docker-compose.yaml"
 sql = SQLITE()
 encryption_key = os.getenv("ENCRYPTION_KEY").encode()
 encryption = Encryption(encryption_key)
+auth = AUTH(sql, encryption)
 
 rcon: RCON | None = None
 ssh: SSH | None = None
@@ -49,15 +51,6 @@ async def lifespan(app: FastAPI):
             port INTEGER NOT NULL,
             username TEXT NOT NULL,
             password TEXT NOT NULL
-        )
-    """)
-    
-    await sql.execute("""
-        CREATE TABLE IF NOT EXISTS systemUser(
-            userId INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL
         )
     """)
     
@@ -89,8 +82,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+secureCookie = False
+
 connectedClients: set[WebSocket] = set()
 logBuffer = deque(maxlen=200)
+
+
+@app.post("/register")
+async def register(user: models.userInput, response: Response):
+    result = await auth.register(user.username, user.password)
+    sessionToken = result.get("sessionToken")
+    sessionExpirationHours = result.get("sessionExpirationHours")
+    response.set_cookie(
+        key="sessionToken",
+        value=sessionToken,
+        httponly=True,
+        secure=secureCookie,
+        samesite="lax",
+        max_age=sessionExpirationHours * 3600,
+        path="/",
+    )
+    return {
+        "message": result.get("message"),
+    }
 
 @app.get("/status")
 async def status():

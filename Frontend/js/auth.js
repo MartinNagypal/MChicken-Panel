@@ -52,7 +52,7 @@ authRegisterButton.addEventListener("click", () => {
     }
 });
 
-authConfirmButton.addEventListener("click", () => {
+authConfirmButton.addEventListener("click", async () => {
     const username = document.getElementById("usernameInput").value;
     const password = document.getElementById("passwordInput").value;
     const confirmPassword = document.getElementById("registerConfirmPasswordInput").value;
@@ -84,5 +84,25 @@ authConfirmButton.addEventListener("click", () => {
     if(password === confirmPassword){
         document.getElementById("registerConfirmPasswordInput").classList.remove("authInputError");
         document.getElementById("registerConfirmPasswordInput").classList.add("authInputSuccess");
+        if(username.length > 0 && password.length > 0){
+            result = await fetch("http://127.0.0.1:8000/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+            const data = await result.json();
+            if(data.error){
+                document.getElementById("authContainer").classList.add("authContainerRed");
+            }
+            else{
+                document.getElementById("authContainer").classList.add("authContainerGreen");
+                console.log(data);
+            }
+        }
     }
 });
