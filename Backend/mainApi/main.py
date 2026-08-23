@@ -184,20 +184,21 @@ async def status(request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            return {"status": "not configured"}
+            raise HTTPException(status_code=500, detail="SSH not configured")
         try:
             result = await ssh.run(f'docker ps | grep {dockerContainerName}')
             if 'healthy' in result.stdout:
-                return {"status": "healthy"}
+                return {"status": "healthy", "status_code": 200}
             elif 'starting' in result.stdout:
-                return {"status": "starting"}
+                return {"status": "starting", "status_code": 200}
             elif 'unhealthy' in result.stdout:
-                return {"status": "unhealthy"}
+                return {"status": "unhealthy", "status_code": 200}
             else:
-                return {"status": "offline"}
+                return {"status": "offline", "status_code": 200}
             
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            print(f"Error fetching server status: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed fetching server status.")
     else:
         raise HTTPException(status_code=401, detail="Invalid session token.")
     
@@ -208,7 +209,7 @@ async def stats(request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            return {"status": "not configured"}
+            raise HTTPException(status_code=500, detail="SSH not configured")
         try:
             await rcon.updateRconPassword()
             playerCount = await rcon.run("list")
@@ -240,15 +241,14 @@ async def stats(request: Request):
                 "cpuUsage": cpuUsage.stdout.strip(),
                 "currentMemUsage": currentMemUsage,
                 "maxMem": maxMem,
-                'uptime': uptime
+                'uptime': uptime,
+                'status_code': 200
             }
             
         except Exception as e:
-            raise HTTPException(status_code=500, detail={
-                "error": "Error fetching server stats",
-                "details": str(e),
-                "errorCode": 500
-            })
+            print(f"Error fetching server stats: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed fetching server stats.")
+        
     else:
         raise HTTPException(status_code=401, detail="Invalid session token.")
 
@@ -259,17 +259,17 @@ async def serverStartStop(request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            return {"status": "not configured"}
+            raise HTTPException(status_code=500, detail="SSH not configured")
         try:
             status = await ssh.run(f'docker ps | grep {dockerContainerName}')
             if 'healthy' in status.stdout:
                 await ssh.runInDir(serverDirectory, f'docker stop {dockerContainerName}')
-                return {"message": "Server stop command executed successfully."}
+                return {"message": "Server stop command executed successfully.", "status_code": 200}
             else:
                 await ssh.runInDir(serverDirectory, f'docker start {dockerContainerName}')
-                return {"message": "Server start command executed successfully."}
+                return {"message": "Server start command executed successfully.", "status_code": 200}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Operation =server-startstop= failed.")
     else:
         raise HTTPException(status_code=401, detail="Invalid session token.")
 
@@ -280,12 +280,12 @@ async def serverRestart(request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            return {"status": "not configured"}
+            raise HTTPException(status_code=500, detail="SSH not configured")
         try:
             await ssh.runInDir(serverDirectory, f'docker restart {dockerContainerName}')
-            return {"message": "Server restart command executed successfully."}
+            return {"message": "Server restart command executed successfully.", "status_code": 200}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Operation =server-restart= failed.")
     else:
         raise HTTPException(status_code=401, detail="Invalid session token.") 
 
@@ -383,15 +383,15 @@ async def sendCommand(command:models.commandInput, request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            return {"status": "not configured"}
+            raise HTTPException(status_code=500, detail="SSH not configured")
         try:
             await rcon.updateRconPassword()
             response = await rcon.run(command.command)
             logBuffer.append(response)
-            return response
+            return {"response": response, "status_code": 200}
         
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed sending command to server.")
     else:
         raise HTTPException(status_code=401, detail="Invalid session token.")
     
@@ -417,14 +417,17 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request):
                         await ssh.connect()
                         rcon = await RCON.create(sshConfig.ip, rconPort, ssh, serverFilesDirectory)
                         await restartLogWatcher()
-                        return {"message": "SSH configuration saved successfully."}
+                        raise HTTPException(status_code=200, detail="SSH configuration saved and connected successfully.")
                     except Exception as e:
-                        return {"error": f"Failed to save SSH configuration: {str(e)}"}
+                        print(f"Error saving SSH configuration: {str(e)}")
+                        raise HTTPException(status_code=500, detail="Failed to save SSH configuration.")
                         
-
             except Exception as e:
-                return {"error": f"Failed to connect to SSH server: {str(e)}"}
+                print(f"Error connecting to SSH server: {str(e)}")
+                raise HTTPException(status_code=400, detail="Failed to connect to SSH server. Please check your credentials and try again.")
+            
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            print(f"Error during SSH configuration: {str(e)}")
+            raise HTTPException(status_code=500, detail="SSH configuration failed.")
     else:
         raise HTTPException(status_code=401, detail="Invalid session token.")

@@ -190,14 +190,17 @@ async function sendConsoleInput() {
         },
         body: JSON.stringify({ command })
     });
-    const response = await result.json();
-    const terminal = document.getElementById('consoleContent');
-    line = document.createElement('div');
-    line.textContent = response;
-    checkLineStatus(response, line);
-    terminal.appendChild(line);
-    terminal.scrollTop = terminal.scrollHeight;
-    inputField.value = '';
+    const result = await result.json()
+    if(result.status_code != 200){
+        const terminal = document.getElementById('consoleContent');
+        const response = result.response
+        line = document.createElement('div');
+        line.textContent = response;
+        checkLineStatus(response, line);
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+        inputField.value = '';
+    }
 }
 
 function checkLineStatus(lineString, lineObject) {

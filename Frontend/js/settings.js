@@ -42,7 +42,5 @@ serverSetupTabSSHSubmit.addEventListener("click", async () => {
             body: JSON.stringify({ ip, port, username, password })
         });
         const result = await response.json();
-        console.log(result);
     }
-    // Here you can add the logic to send this data to your backend or perform any other action.
 });

@@ -45,7 +45,7 @@ async function fetchServerStatus() {
             document.getElementById('buttonStartStopSpan').textContent = 'Start';
             document.getElementById('buttonStartStop').classList.remove('buttonStartStopStop');
         }
-        else{
+        else if(data.status_code != 200) {
             document.getElementById('serverStatus').textContent = 'Error';
             document.getElementById('serverStatus').style.color = 'var(--status-danger)';
             document.getElementById('serverStatusIcon').style.color = 'var(--status-danger)';
@@ -97,14 +97,12 @@ async function fetchServerStats() {
             credentials: 'include'
         });
         const data = await response.json();
-        if(data.detail) {
-            document.getElementById('serverStatPlayers').textContent = "None";
-            document.getElementById('serverStatCPUUsage').textContent = "None";
-            document.getElementById('serverStatMemUsage').textContent = "None";
-            document.getElementById('serverStatMaxMem').textContent = "None";
-            document.getElementById('serverStatUptime').textContent = "None";
-
-
+        if(data.status_code != 200){
+            document.getElementById('serverStatPlayers').textContent = "N/A";
+            document.getElementById('serverStatCPUUsage').textContent = "N/A";
+            document.getElementById('serverStatMemUsage').textContent = "N/A";
+            document.getElementById('serverStatMaxMem').textContent = "N/A";
+            document.getElementById('serverStatUptime').textContent = "N/A";
         }
         else{
             document.getElementById('serverStatPlayers').textContent = `${data.currentPlayers} / ${data.maxPlayers}`;
@@ -131,7 +129,9 @@ buttonRestart.addEventListener('click', async() => {
             credentials: 'include'
         });
         const data = await response.json();
-        await fetchServerStatus();
+        if(data.status_code == 200){
+            await fetchServerStatus()
+        }
     } catch (error) {
         console.error('Error restarting server:', error);
     }
@@ -144,7 +144,9 @@ buttonStartStop.addEventListener('click', async() => {
             credentials: 'include'
         });
         const data = await response.json();
-        await fetchServerStatus();
+        if(data.status_code == 200){
+            await fetchServerStatus()
+        }
     } catch (error) {
         console.error('Error starting/stopping server:', error);
     }
