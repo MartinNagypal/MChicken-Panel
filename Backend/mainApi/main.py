@@ -432,3 +432,15 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request):
             raise HTTPException(status_code=500, detail="SSH configuration failed.")
     else:
         raise HTTPException(status_code=401, detail="Invalid session token.")
+    
+@app.get("/user/username")
+async def getUsername(request: Request):
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        username = await sql.fetchone("SELECT username FROM userSession WHERE sessionToken = ?", (currentSessionToken,))
+        return {"username": username, "status_code": 200}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid session token.")
+    

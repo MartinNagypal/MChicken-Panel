@@ -25,6 +25,9 @@ async function checkAuthStatus(){
         if(data.status_code != 200){
             window.location.href = "../pages/auth.html";
         }
+        else{
+            await fetchUsername();
+        }
     }
     catch (error) {
         console.error("Error checking authentication status:", error);
@@ -259,4 +262,19 @@ async function showInfoScreen(message, success = false) {
     await sleep(2500);
 
     infoScreen.classList.remove("infoScreenVisible");
+}
+async function fetchUsername() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/user/username", {
+            method: "GET",
+            credentials: "include"
+        });
+        const data = await response.json();
+        if (data.status_code == 200) {
+            document.getElementById("sidePanelUsername").textContent = data.username;
+        }
+    } catch (error) {
+        console.error("Error fetching username:", error);
+        throw error;
+    }
 }
