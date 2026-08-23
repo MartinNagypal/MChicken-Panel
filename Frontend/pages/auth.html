@@ -17,8 +17,18 @@
         <hr class="hrSplitter" style="width: 100% !important;">
         <div class="authInputLabel">Username</div>
         <input type="text" id="usernameInput" class="mainInputStyle" placeholder="Enter your username">
+        <div id="usernameRequirements" class="authRequirements authRequirementsHidden">
+            <div>Min length: 4 characters</div>
+            <div>Max length: 16 characters</div>
+        </div>
         <div class="authInputLabel">Password</div>
         <input type="password" id="passwordInput" class="mainInputStyle" placeholder="Password">
+        <div id="passwordRequirements" class="authRequirements authRequirementsHidden">
+            <div>Min 8 Characters</div>
+            <div>Uppercase</div>
+            <div>Lowercase</div>
+            <div>Number</div>
+        </div>
         <div class="authButton" id="authLoginButton">Login</div>
         <div class="authButton" id="authRegisterButton">Register</div>
         <div class="authRegisterForm authRegisterFormHidden" id="authRegisterForm">

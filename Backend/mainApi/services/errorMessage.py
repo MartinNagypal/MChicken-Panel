@@ -1,0 +1,25 @@
+class errorMessage:
+    def __init__(self):
+        self.usernameRequirementNotFulfilled = "Username requirement not fulfilled."
+        self.passwordRequirementNotFulfilled = "Password requirement not fulfilled."
+        self.invalidUsernameOrPassword = "Invalid username or password."
+        self.userAlreadyExists = "User already exists."
+        self.registrationFailed = "Registration failed. Try again later."
+        self.registrationDisabled = "Registration is disabled."
+        self.loginFailed = "Login failed. Try again later."
+        self.alreadyLoggedIn = "Already logged in."
+        self.noActiveSession = "No active session found. Please log in."
+        self.invalidSession = "Session is invalid or expired."
+        self.sshNotConfigured = "SSH is not configured"
+        self.sshConnectionFailed = "SSH connection failed."
+        self.sshConfigSaveFailed = "The SSH configuration could not be saved."
+        self.sshConfigFailed = "The SSH configuration could not be processed"
+        self.__websockerInvalidSession= "Your session is invalid or has expired. Please log in again."
+        self.serverStatusUnavailable = "The server status could not be retrieved."
+        self.serverStatsUnavailable = "The server statistics could not be retrieved."
+        self.serverStartStopFailed = "Operation Server start/stop failed."
+        self.serverRestartFailed = "Operation Server restart failed."
+        self.serverDataUnavailable = "The Server information could not be retrieved."
+        self.serverCommandFailed = "The server command could not be executed."
+        
+        

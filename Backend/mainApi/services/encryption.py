@@ -2,11 +2,14 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError
 from cryptography.fernet import Fernet
 import secrets
+import hashlib
+import hmac
 
 class Encryption:
     def __init__(self, key: bytes):
         self.__passwordHasher = PasswordHasher()
         self.__fernet = Fernet(key)
+        self.__key = key
         
     def hashPassword(self, password: str) -> str:
         return self.__passwordHasher.hash(password)
@@ -25,3 +28,10 @@ class Encryption:
     
     def generateSessionToken(self) -> str:
         return secrets.token_urlsafe(32)
+    
+    def hashSessionToken(self, sessionToken: str) -> str:
+        return hmac.new(
+            self.__key,
+            sessionToken.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()

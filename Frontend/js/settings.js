@@ -46,7 +46,7 @@ serverSetupTabSSHSubmit.addEventListener("click", async () => {
             body: JSON.stringify({ ip, port, username, password })
         });
         const result = await response.json();
-        if(result.status_code == 200){
+        if(response.ok){
             await showInfoScreen("SSH configuration saved successfully.", true);
         }
         else{

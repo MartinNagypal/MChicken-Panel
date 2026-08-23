@@ -13,12 +13,13 @@ from collections import deque
 from services.sqlite import SQLITE
 from services.encryption import Encryption
 from services.auth import AUTH
+from services.errorMessage import errorMessage
 
 load_dotenv()
 ip = os.getenv("SSH_IP")
 rconPort = os.getenv("RCON_PORT")
 rconPassword = os.getenv("RCON_PASSWORD")
-allowRegistration = os.getenv("ALLOW_REGISTRATION")
+allowRegistration = os.getenv("ALLOW_REGISTRATION", "").lower() == "true"
 
 dockerContainerName = "create"
 serverDirectory = "/mnt/serverData/mcDomiCreate/"
@@ -26,9 +27,12 @@ serverFilesDirectory = "/mnt/serverData/mcDomiCreate/data/"
 dockerComposeFile = "docker-compose.yaml"
 
 sql = SQLITE()
-encryption_key = os.getenv("ENCRYPTION_KEY").encode()
-encryption = Encryption(encryption_key)
+encryptionKey = os.getenv("ENCRYPTION_KEY").encode()
+if not encryptionKey:
+    raise RuntimeError("ENCRYPTION_KEY fehlt.")
+encryption = Encryption(encryptionKey)
 auth = AUTH(sql, encryption)
+error = errorMessage()
 
 rcon: RCON | None = None
 ssh: SSH | None = None
@@ -85,7 +89,6 @@ secureCookie = False
 connectedClients: set[WebSocket] = set()
 logBuffer = deque(maxlen=200)
 
-
 #auth endpoints
 @app.post("/register")
 async def register(user: models.userInput, response: Response):
@@ -94,7 +97,20 @@ async def register(user: models.userInput, response: Response):
     
     #if its first user or registration is allowed -> continue
     if isFirstUser == True or allowRegistration == True:
-        result = await auth.register(user.username, user.password)
+        if isFirstUser:
+            role = "admin"
+        else:
+            role = "user"
+            
+        isUsernameValid = await auth.validateUsername(user.username)
+        if isUsernameValid.get("valid") == False:
+            raise HTTPException(status_code=400, detail=error.usernameRequirementNotFulfilled)
+            
+        isPasswordValid = await auth.validatePassword(user.password)
+        if isPasswordValid.get("valid") == False:
+            raise HTTPException(status_code=400, detail=error.passwordRequirementNotFulfilled)
+        
+        result = await auth.register(user.username, user.password, role)
         #if resgistration was successful -> set cookie and return message
         if result.get("message"):
             sessionToken = result.get("sessionToken")
@@ -109,13 +125,15 @@ async def register(user: models.userInput, response: Response):
                 path="/",
             )
             return {
-                "status_code": 200,
                 "message": result.get("message"),
             }
         else:
-            raise HTTPException(status_code=500, detail="Registration failed.")
+            if(result.get("error") == "1"):
+                raise HTTPException(status_code=409, detail=error.userAlreadyExists)
+            else:
+                raise HTTPException(status_code=500, detail=error.registrationFailed)
     else:
-        raise HTTPException(status_code=403, detail="Registration is disabled.")
+        raise HTTPException(status_code=403, detail=error.registrationDisabled)
 
 @app.post("/login")
 async def login(user: models.userInput, request: Request, response: Response):
@@ -123,15 +141,20 @@ async def login(user: models.userInput, request: Request, response: Response):
     #check if user is logged in
     currentSessionToken = request.cookies.get("sessionToken")
     if currentSessionToken:
-        raise HTTPException(status_code=409, detail="Already logged in.")
+        isValidSession = await auth.verifySession(currentSessionToken)
+        isValidSession = isValidSession.get("valid")
+        if isValidSession == True:
+            raise HTTPException(status_code=409, detail=error.alreadyLoggedIn)
+        else:
+            response.delete_cookie("sessionToken", path="/")
     
     #attempt login
     result = await auth.login(user.username, user.password)
     if result.get("error"):
         if result.get("statusCode") == 401:
-            raise HTTPException(status_code=401, detail="Invalid username or password.")
+            raise HTTPException(status_code=401, detail=error.invalidUsernameOrPassword)
         else:
-            raise HTTPException(status_code=500, detail="Server error during login.")
+            raise HTTPException(status_code=500, detail=error.loginFailed)
         
     #generate session
     sessionToken = result.get("sessionToken")
@@ -147,33 +170,32 @@ async def login(user: models.userInput, request: Request, response: Response):
             path="/",
         )
         return {
-            "status_code": 200,
             "message": result.get("message"),
         }
     else:
-        raise HTTPException(status_code=500, detail="Server error during login.")
+        raise HTTPException(status_code=500, detail=error.loginFailed)
 
 @app.get("/verifySession")
 async def verifySession(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     if not currentSessionToken:
-        raise HTTPException(status_code=401, detail="No running session found.")
+        raise HTTPException(status_code=401, detail=error.noActiveSession)
     
     isValid = await auth.verifySession(currentSessionToken)
     if isValid.get("valid")== True:
-        return{"status_code": 200, "valid": True}
+        return{"valid": True}
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.")
+        raise HTTPException(status_code=401, detail=error.invalidSession)
     
 @app.post("/logout")
 async def logout(request: Request, response: Response):
     currentSessionToken = request.cookies.get("sessionToken")
     if not currentSessionToken:
-        raise HTTPException(status_code=401, detail="No running session found.")   
+        raise HTTPException(status_code=401, detail=error.noActiveSession)   
     
     result = await auth.logout(currentSessionToken)
     response.delete_cookie("sessionToken", path="/")
-    return {"status_code": 200, "message": result.get("message")}
+    return {"message": result.get("message")}
 
 
 #server endpoints
@@ -184,24 +206,24 @@ async def status(request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            raise HTTPException(status_code=500, detail="SSH not configured")
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
         try:
             result = await ssh.run(f'docker ps | grep {dockerContainerName}')
             if 'healthy' in result.stdout:
-                return {"status": "healthy", "status_code": 200}
+                return {"status": "healthy"}
             elif 'starting' in result.stdout:
-                return {"status": "starting", "status_code": 200}
+                return {"status": "starting"}
             elif 'unhealthy' in result.stdout:
-                return {"status": "unhealthy", "status_code": 200}
+                return {"status": "unhealthy"}
             else:
-                return {"status": "offline", "status_code": 200}
+                return {"status": "offline"}
             
         except Exception as e:
             print(f"Error fetching server status: {str(e)}")
-            raise HTTPException(status_code=500, detail="Failed fetching server status.")
+            raise HTTPException(status_code=500, detail=error.serverStatusUnavailable)
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.")
-    
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
 @app.get("/stats")
 async def stats(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
@@ -209,7 +231,7 @@ async def stats(request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            raise HTTPException(status_code=500, detail="SSH not configured")
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
         try:
             await rcon.updateRconPassword()
             playerCount = await rcon.run("list")
@@ -241,53 +263,52 @@ async def stats(request: Request):
                 "cpuUsage": cpuUsage.stdout.strip(),
                 "currentMemUsage": currentMemUsage,
                 "maxMem": maxMem,
-                'uptime': uptime,
-                'status_code': 200
+                'uptime': uptime
             }
             
         except Exception as e:
             print(f"Error fetching server stats: {str(e)}")
-            raise HTTPException(status_code=500, detail="Failed fetching server stats.")
+            raise HTTPException(status_code=500, detail=error.serverStatsUnavailable)
         
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.")
+        raise HTTPException(status_code=401, detail=error.invalidSession)
 
-@app.get("/server/startstop")
+@app.post("/server/startstop")
 async def serverStartStop(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            raise HTTPException(status_code=500, detail="SSH not configured")
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
         try:
             status = await ssh.run(f'docker ps | grep {dockerContainerName}')
             if 'healthy' in status.stdout:
                 await ssh.runInDir(serverDirectory, f'docker stop {dockerContainerName}')
-                return {"message": "Server stop command executed successfully.", "status_code": 200}
+                return {"message": "Server stop command executed successfully."}
             else:
                 await ssh.runInDir(serverDirectory, f'docker start {dockerContainerName}')
-                return {"message": "Server start command executed successfully.", "status_code": 200}
+                return {"message": "Server start command executed successfully."}
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Operation =server-startstop= failed.")
+            raise HTTPException(status_code=500, detail=error.serverStartStopFailed)
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.")
+        raise HTTPException(status_code=401, detail=error.invalidSession)
 
-@app.get("/server/restart")
+@app.post("/server/restart")
 async def serverRestart(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            raise HTTPException(status_code=500, detail="SSH not configured")
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
         try:
             await ssh.runInDir(serverDirectory, f'docker restart {dockerContainerName}')
-            return {"message": "Server restart command executed successfully.", "status_code": 200}
+            return {"message": "Server restart command executed successfully."}
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Operation =server-restart= failed.")
+            raise HTTPException(status_code=500, detail=error.serverRestartFailed)
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.") 
+        raise HTTPException(status_code=401, detail=error.invalidSession)
 
 @app.get("/server/data")
 async def serverData(request: Request):
@@ -296,7 +317,7 @@ async def serverData(request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            return {"status": "not configured"}
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
         try:
             serverNameResult = await ssh.runInDir(serverDirectory, f'cat {dockerComposeFile} | grep container_name')
             serverNameMatch = re.search(r"container_name:\s*([a-zA-Z0-9_-]+)", serverNameResult.stdout)
@@ -312,10 +333,10 @@ async def serverData(request: Request):
                 "ip": await ssh.getIp()
             }
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=error.serverDataUnavailable)
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.")
-    
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
 @app.websocket("/server/logs")
 async def serverLogs(websocket: WebSocket):
     currentSessionToken = websocket.cookies.get("sessionToken")
@@ -383,18 +404,18 @@ async def sendCommand(command:models.commandInput, request: Request):
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         if(ssh is None):
-            raise HTTPException(status_code=500, detail="SSH not configured")
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
         try:
             await rcon.updateRconPassword()
             response = await rcon.run(command.command)
             logBuffer.append(response)
-            return {"response": response, "status_code": 200}
+            return {"response": response}
         
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Failed sending command to server.")
+            raise HTTPException(status_code=500, detail=error.serverCommandFailed)
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.")
-    
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
 @app.post("/server/sshConfig")
 async def sshConfig(sshConfig: models.sshConfig, request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
@@ -409,7 +430,7 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request):
                 result = await sql.fetchone("SELECT * FROM server WHERE ip = ? AND port = ?", (sshConfig.ip, sshConfig.port))
                 if result:
                     await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, encryption.encryptSecret(sshConfig.password), sshConfig.ip, sshConfig.port))
-                    return {"status_code": 200, "detail": "SSH configuration updated successfully."}
+                    return {"detail": "SSH configuration updated successfully."}
                 else:
                     try:
                         await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, encryption.encryptSecret(sshConfig.password)))
@@ -418,29 +439,29 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request):
                         await ssh.connect()
                         rcon = await RCON.create(sshConfig.ip, rconPort, ssh, serverFilesDirectory)
                         await restartLogWatcher()
-                        return {"status_code": 200, "detail": "SSH configuration saved and connected successfully."}
+                        return {"detail": "SSH configuration saved and connected successfully."}
                     except Exception as e:
                         print(f"Error saving SSH configuration: {str(e)}")
-                        raise HTTPException(status_code=500, detail="Failed to save SSH configuration.")
+                        raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
                         
             except Exception as e:
                 print(f"Error connecting to SSH server: {str(e)}")
-                raise HTTPException(status_code=400, detail="Failed to connect to SSH server. Please check your credentials and try again.")
+                raise HTTPException(status_code=400, detail=error.sshConnectFailed)
             
         except Exception as e:
             print(f"Error during SSH configuration: {str(e)}")
-            raise HTTPException(status_code=500, detail="SSH configuration failed.")
+            raise HTTPException(status_code=500, detail=error.sshConfigFailed)
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.")
-    
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
 @app.get("/user/username")
 async def getUsername(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
-        username = await sql.fetchone("SELECT username FROM userSession WHERE sessionToken = ?", (currentSessionToken,))
-        return {"username": username, "status_code": 200}
+        username = await sql.fetchone("SELECT username FROM userSession WHERE sessionToken = ?", (encryption.hashSessionToken(currentSessionToken),))
+        return {"username": username}
     else:
-        raise HTTPException(status_code=401, detail="Invalid session token.")
+        raise HTTPException(status_code=401, detail=error.invalidSession)
     

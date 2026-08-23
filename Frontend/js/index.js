@@ -46,7 +46,7 @@ async function fetchServerStatus() {
             document.getElementById('buttonStartStopSpan').textContent = 'Start';
             document.getElementById('buttonStartStop').classList.remove('buttonStartStopStop');
         }
-        else if(data.status_code != 200) {
+        else if(!response.ok) {
             document.getElementById('serverStatus').textContent = 'Error';
             document.getElementById('serverStatus').style.color = 'var(--status-danger)';
             document.getElementById('serverStatusIcon').style.color = 'var(--status-danger)';
@@ -67,7 +67,7 @@ async function fetchServerData() {
             credentials: 'include'
         });
         const data = await response.json();
-        if(data.ip){
+        if(response.ok){
             document.getElementById('serverInfoHeaderName').textContent = data.serverName;
             document.getElementById('serverVersion').textContent = data.serverVersion;
             document.getElementById('serverIp').textContent = data.ip;
@@ -98,7 +98,7 @@ async function fetchServerStats() {
             credentials: 'include'
         });
         const data = await response.json();
-        if(data.status_code != 200){
+        if(!response.ok){
             document.getElementById('serverStatPlayers').textContent = "N/A";
             document.getElementById('serverStatCPUUsage').textContent = "N/A";
             document.getElementById('serverStatMemUsage').textContent = "N/A";
@@ -126,11 +126,11 @@ fetchServerData();
 buttonRestart.addEventListener('click', async() => {
     try {
         const response = await fetch('http://127.0.0.1:8000/server/restart', {
-            method: 'GET',
+            method: 'POST',
             credentials: 'include'
         });
         const data = await response.json();
-        if(data.status_code == 200){
+        if(response.ok){
             await fetchServerStatus()
         }
         else{
@@ -144,11 +144,11 @@ buttonRestart.addEventListener('click', async() => {
 buttonStartStop.addEventListener('click', async() => {
     try {
         const response = await fetch('http://127.0.0.1:8000/server/startstop', {
-            method: 'GET',
+            method: 'POST',
             credentials: 'include'
         });
         const data = await response.json();
-        if(data.status_code == 200){
+        if(response.ok){
             await fetchServerStatus()
         }
         else{

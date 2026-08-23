@@ -157,3 +157,25 @@
     border: none;
     transform: translateY(-10pt);
 }
+
+.authRequirements{
+    width: 100%;
+    font-size: 10pt;
+    color: var(--text-color-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5pt;
+    transition: all 0.3s ease;
+    transform: translateY(0pt);
+}
+
+.authRequirementsHidden{
+    opacity: 0;
+    visibility: hidden;
+    max-height: 0;
+    padding: 0;
+    border: none;
+    transform: translateY(-10pt);
+}

@@ -48,7 +48,8 @@ authLoginButton.addEventListener("click", async () => {
             })
         })
         const data = await result.json();
-        if(data.status_code != 200){
+        if(!result.ok){
+            console.log(result);
             document.getElementById("authContainer").classList.add("authContainerRed");
             await showErrorMessage(data.detail);
         }
@@ -65,24 +66,28 @@ authRegisterButton.addEventListener("click", () => {
 
     const username = document.getElementById("usernameInput").value;
     const password = document.getElementById("passwordInput").value;
-    
-    if(username.length < 1){
+
+    if(validateUsername(username) === false){
         document.getElementById("usernameInput").classList.add("authInputError");
+        document.getElementById("usernameRequirements").classList.remove("authRequirementsHidden");
     }
     else{
         document.getElementById("usernameInput").classList.remove("authInputError");
         document.getElementById("usernameInput").classList.add("authInputSuccess");
+        document.getElementById("usernameRequirements").classList.add("authRequirementsHidden");
     }
 
-    if(password.length < 1){
+    if(validatePassword(password) === false){
         document.getElementById("passwordInput").classList.add("authInputError");
+        document.getElementById("passwordRequirements").classList.remove("authRequirementsHidden");
     }
     else{
-        document.getElementById("usernameInput").classList.remove("authInputError");
+        document.getElementById("passwordInput").classList.remove("authInputError");
         document.getElementById("passwordInput").classList.add("authInputSuccess");
+        document.getElementById("passwordRequirements").classList.add("authRequirementsHidden");
     }
 
-    if(username.length > 0 && password.length > 0){
+    if(validateUsername(username) === true && validatePassword(password) === true){
         document.getElementById("authLoginButton").classList.add("authButtonHidden");
         document.getElementById("authRegisterButton").classList.add("authButtonHidden");
         document.getElementById("authRegisterForm").classList.add("authRegisterFormActive");
@@ -94,7 +99,7 @@ authConfirmButton.addEventListener("click", async () => {
     const password = document.getElementById("passwordInput").value;
     const confirmPassword = document.getElementById("registerConfirmPasswordInput").value;
 
-    if(username.length < 1){
+    if(!validateUsername(username)){
         document.getElementById("usernameInput").classList.add("authInputError");
     }
     else{
@@ -102,7 +107,7 @@ authConfirmButton.addEventListener("click", async () => {
         document.getElementById("usernameInput").classList.add("authInputSuccess");
     }
 
-    if(password.length < 1){
+    if(!validatePassword(password)){
         document.getElementById("passwordInput").classList.add("authInputError");
     }
     else{
@@ -110,7 +115,7 @@ authConfirmButton.addEventListener("click", async () => {
         document.getElementById("passwordInput").classList.add("authInputSuccess");
     }
 
-    if(confirmPassword.length < 1 || confirmPassword !== password){
+    if(confirmPassword !== password){
         document.getElementById("registerConfirmPasswordInput").classList.add("authInputError");
         await showErrorMessage("Passwords don't match.");
     }
@@ -135,7 +140,7 @@ authConfirmButton.addEventListener("click", async () => {
                 })
             });
             const data = await result.json();
-            if(data.status_code != 200){
+            if(!result.ok){
                 document.getElementById("authContainer").classList.add("authContainerRed");
                 await showErrorMessage(data.detail);
             }
@@ -169,4 +174,19 @@ async function checkAuthStatus(){
     catch (error) {
         console.error("Error checking authentication status:", error);
     }
+}
+
+function validatePassword(password){
+    const pwMinLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    return password.length >= pwMinLength && hasUpperCase && hasLowerCase && hasNumber;
+}
+
+function validateUsername(username){
+    const usernameMinLength = 4;
+    const usernameMaxLength = 16; 
+    return username.length >= usernameMinLength && username.length <= usernameMaxLength;
 }

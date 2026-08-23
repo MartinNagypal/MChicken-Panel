@@ -6,39 +6,29 @@ class AUTH:
         self.__encryption = encryption
         self.__sessionExpirationHours = sessionExpirationHours
 
-    async def register(self, username: str, password: str):
+    async def register(self, username: str, password: str, role:str):
         await self.__db.execute("""
             CREATE TABLE IF NOT EXISTS systemUser(
                 userId INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
+                username TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
                 role TEXT NOT NULL
             )
         """)
         
         encryptedPassword = self.__encryption.hashPassword(password)
-        isFirstUser = await self.__db.fetchone("SELECT * FROM systemUser LIMIT 1")
-        if not isFirstUser:
-            role = "admin"
-            await self.__db.execute("INSERT INTO systemUser (username, password, role) VALUES (?, ?, ?)", (username, encryptedPassword, role))
-            session =await self.createSession(username)
-            sessionToken = session.get("sessionToken")
-            sessionExpiresAt = session.get("sessionExpiresAt")
-            return {"message": "First user registered successfully as admin.", "sessionToken": sessionToken, "sessionExpirationHours": self.__sessionExpirationHours }
+        doesUserExist = await self.__db.fetchone("SELECT * FROM systemUser WHERE username = ?", (username,))
+        if doesUserExist:
+            return {"error": "1"}
         else:
-            doesUserExist = await self.__db.fetchone("SELECT * FROM systemUser WHERE username = ?", (username,))
-            if doesUserExist:
-                return {"error": "User already exists."}
-            else:
-                role = "user"
-                await self.__db.execute("INSERT INTO systemUser (username, password, role) VALUES (?, ?, ?)", (username, encryptedPassword, role))
-                session = await self.createSession(username)
-                sessionToken = session.get("sessionToken")
-                sessionExpiresAt = session.get("sessionExpiresAt")
-                return {"message": "User registered successfully.", "sessionToken": sessionToken, "sessionExpirationHours": self.__sessionExpirationHours}
+            await self.__db.execute("INSERT INTO systemUser (username, password, role) VALUES (?, ?, ?)", (username, encryptedPassword, role))
+            session = await self.createSession(username)
+            sessionToken = session.get("sessionToken")
+            return {"message": "User registered successfully.", "sessionToken": sessionToken, "sessionExpirationHours": self.__sessionExpirationHours}
 
     async def createSession(self, username: str):
         sessionToken = self.__encryption.generateSessionToken()
+        sessionTokenHashed = self.__encryption.hashSessionToken(sessionToken)
         sessionCreatedAt = datetime.now(timezone.utc)
         sessionExpiresAt = sessionCreatedAt + timedelta(hours=self.__sessionExpirationHours)
         
@@ -56,7 +46,7 @@ class AUTH:
             userId = await self.__db.fetchone("SELECT userId FROM systemUser WHERE username = ?", (username,))
             if userId:
                 userId = userId[0]
-                await self.__db.execute("INSERT INTO userSession (username, userId, sessionToken, sessionCreatedAt, sessionExpiresAt) VALUES (?, ?, ?, ?, ?)", (username, userId, sessionToken, sessionCreatedAt.isoformat(), sessionExpiresAt.isoformat()))
+                await self.__db.execute("INSERT INTO userSession (username, userId, sessionToken, sessionCreatedAt, sessionExpiresAt) VALUES (?, ?, ?, ?, ?)", (username, userId, sessionTokenHashed, sessionCreatedAt.isoformat(), sessionExpiresAt.isoformat()))
                 return {"sessionToken": sessionToken, "sessionExpiresAt": sessionExpiresAt}
             else:
                 return {"error": "User not found."}
@@ -66,7 +56,8 @@ class AUTH:
         
     async def verifySession(self, sessionToken: str):
         try:
-            session = await self.__db.fetchone("SELECT * FROM userSession WHERE sessionToken = ?", (sessionToken,))
+            hashedSessionToken = self.__encryption.hashSessionToken(sessionToken)
+            session = await self.__db.fetchone("SELECT * FROM userSession WHERE sessionToken = ?", (hashedSessionToken,))
             if session:
                 sessionExpiresAt = session[5]
                 if datetime.now(timezone.utc) < datetime.fromisoformat(sessionExpiresAt):
@@ -112,3 +103,23 @@ class AUTH:
                 return True
         else:
             return True
+
+    async def validatePassword(self, password: str):
+        minLength = 8
+        hasUpperCase = any(char.isupper() for char in password)
+        hasLowerCase = any(char.islower() for char in password)
+        hasNumber = any(char.isdigit() for char in password)
+
+        if(len(password) >= minLength and hasUpperCase and hasLowerCase and hasNumber): 
+            return {"valid": True}
+        else:
+            return {"valid": False}
+        
+    async def validateUsername(self, username: str):
+        minLength = 4
+        maxLength = 16
+
+        if(len(username) >= minLength and len(username) <= maxLength): 
+            return {"valid": True}
+        else:
+            return {"valid": False}
