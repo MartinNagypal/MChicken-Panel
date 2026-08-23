@@ -1,6 +1,7 @@
 
 buttonStartStop = document.getElementById('buttonStartStop');
 buttonRestart = document.getElementById('buttonRestart');
+buttonBackup = document.getElementById('buttonBackup');
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -132,6 +133,9 @@ buttonRestart.addEventListener('click', async() => {
         if(data.status_code == 200){
             await fetchServerStatus()
         }
+        else{
+            await showInfoScreen(data.detail, false);
+        }
     } catch (error) {
         console.error('Error restarting server:', error);
     }
@@ -147,7 +151,25 @@ buttonStartStop.addEventListener('click', async() => {
         if(data.status_code == 200){
             await fetchServerStatus()
         }
+        else{
+            await showInfoScreen(data.detail, false);
+        }
     } catch (error) {
         console.error('Error starting/stopping server:', error);
+        await showInfoScreen("Error starting/stopping server. Please check the console for details.", false);
     }
 });
+
+async function showInfoScreen(message, success = false) {
+    const infoScreen = document.getElementById("infoScreen");
+    const infoScreenText = document.getElementById("infoScreenText");
+
+    infoScreenText.textContent = message;
+
+    infoScreen.classList.toggle("infoScreenSuccess", success);
+    infoScreen.classList.add("infoScreenVisible");
+
+    await sleep(2500);
+
+    infoScreen.classList.remove("infoScreenVisible");
+}

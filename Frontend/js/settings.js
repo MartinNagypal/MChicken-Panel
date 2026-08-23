@@ -4,6 +4,10 @@ const sshUsername = document.getElementById("sshUsername");
 const sshPassword = document.getElementById("sshPassword");
 const serverSetupTabSSHSubmit = document.getElementById("serverSetupTabSSHSubmit");
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 serverSetupTabSSHSubmit.addEventListener("click", async () => {
     const ip = sshIp.value;
     let port = sshPort.value;
@@ -42,5 +46,25 @@ serverSetupTabSSHSubmit.addEventListener("click", async () => {
             body: JSON.stringify({ ip, port, username, password })
         });
         const result = await response.json();
+        if(result.status_code == 200){
+            await showInfoScreen("SSH configuration saved successfully.", true);
+        }
+        else{
+            await showInfoScreen(result.detail, false);
+        }
     }
 });
+
+async function showInfoScreen(message, success = false) {
+    const infoScreen = document.getElementById("infoScreen");
+    const infoScreenText = document.getElementById("infoScreenText");
+
+    infoScreenText.textContent = message;
+
+    infoScreen.classList.toggle("infoScreenSuccess", success);
+    infoScreen.classList.add("infoScreenVisible");
+
+    await sleep(2500);
+
+    infoScreen.classList.remove("infoScreenVisible");
+}

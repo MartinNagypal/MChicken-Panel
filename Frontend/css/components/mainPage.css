@@ -31,3 +31,47 @@
     color: var(--text-color-secondary);
 }
 
+.infoScreenHidden{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10%;
+    font-size: 15pt;
+    backdrop-filter: blur(10px);
+    border-bottom: 1.5pt solid var(--status-danger);
+    border-radius: 7.5pt;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5pt;
+    z-index: -10;
+    opacity: 0;
+    transform: translateY(-50px);
+    transition: transform 0.3s ease, opacity 0.3s ease, z-index 0.3s ease;
+}
+
+.infoScreenHidden i{
+    color: var(--status-danger);
+}
+
+.infoScreenHidden span{
+    color: var(--text-color);
+    font-weight: bold;
+    transform: translateY(2px);
+}
+
+.infoScreenVisible{
+    z-index: 10 !important;
+    opacity: 100 !important;
+    transform: translateY(0) !important;
+}
+
+.infoScreenSuccess{
+    border-bottom: 1.5pt solid var(--status-success) !important;
+}
+
+.infoScreenSuccess i{
+    color: var(--status-success) !important;
+}
+

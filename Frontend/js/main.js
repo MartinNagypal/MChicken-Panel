@@ -182,7 +182,7 @@ socket.onerror = (error) => {
 async function sendConsoleInput() {
     const inputField = document.getElementById('consoleInputField');
     const command = inputField.value;
-    result = await fetch("http://127.0.0.1:8000/server/sendCommand", {
+    response = await fetch("http://127.0.0.1:8000/server/sendCommand", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -190,8 +190,8 @@ async function sendConsoleInput() {
         },
         body: JSON.stringify({ command })
     });
-    const result = await result.json()
-    if(result.status_code != 200){
+    const result = await response.json()
+    if(result.status_code == 200){
         const terminal = document.getElementById('consoleContent');
         const response = result.response
         line = document.createElement('div');
@@ -200,6 +200,9 @@ async function sendConsoleInput() {
         terminal.appendChild(line);
         terminal.scrollTop = terminal.scrollHeight;
         inputField.value = '';
+    }
+    else{
+        await showInfoScreen(result.detail, false);
     }
 }
 
@@ -243,3 +246,17 @@ logoutButton.addEventListener("click", async () => {
         window.location.href = "../pages/auth.html";
     }
 });
+
+async function showInfoScreen(message, success = false) {
+    const infoScreen = document.getElementById("infoScreen");
+    const infoScreenText = document.getElementById("infoScreenText");
+
+    infoScreenText.textContent = message;
+
+    infoScreen.classList.toggle("infoScreenSuccess", success);
+    infoScreen.classList.add("infoScreenVisible");
+
+    await sleep(2500);
+
+    infoScreen.classList.remove("infoScreenVisible");
+}

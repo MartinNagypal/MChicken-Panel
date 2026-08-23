@@ -409,6 +409,7 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request):
                 result = await sql.fetchone("SELECT * FROM server WHERE ip = ? AND port = ?", (sshConfig.ip, sshConfig.port))
                 if result:
                     await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, encryption.encryptSecret(sshConfig.password), sshConfig.ip, sshConfig.port))
+                    return {"status_code": 200, "detail": "SSH configuration updated successfully."}
                 else:
                     try:
                         await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, encryption.encryptSecret(sshConfig.password)))
@@ -417,7 +418,7 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request):
                         await ssh.connect()
                         rcon = await RCON.create(sshConfig.ip, rconPort, ssh, serverFilesDirectory)
                         await restartLogWatcher()
-                        raise HTTPException(status_code=200, detail="SSH configuration saved and connected successfully.")
+                        return {"status_code": 200, "detail": "SSH configuration saved and connected successfully."}
                     except Exception as e:
                         print(f"Error saving SSH configuration: {str(e)}")
                         raise HTTPException(status_code=500, detail="Failed to save SSH configuration.")
