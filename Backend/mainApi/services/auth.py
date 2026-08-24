@@ -88,7 +88,12 @@ class AUTH:
         
     async def logout(self, sessionToken: str):
         try:
-            await self.__db.execute("DELETE FROM userSession WHERE sessionToken = ?", (sessionToken,))
+            hashedSessionToken = self.__encryption.hashSessionToken(sessionToken)
+            session = await self.__db.fetchone("SELECT * FROM userSession WHERE sessionToken = ?", (hashedSessionToken,))
+            if not session:
+                return {"error": "Session not found.", "statusCode": 401}
+            
+            await self.__db.execute("DELETE FROM userSession WHERE sessionToken = ?", (hashedSessionToken,))
             return {"message": "Logged out successfully."}
         except Exception as e:
             return {"error": str(e)}
