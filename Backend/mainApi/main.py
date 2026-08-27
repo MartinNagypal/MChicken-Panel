@@ -228,6 +228,20 @@ async def getUsers(request: Request):
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
 
+@app.get("session/count")
+async def sessionCount(request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    if not currentSessionToken:
+        raise HTTPException(status_code=401, detail=error.noActiveSession)
+    
+    isValid = await auth.verifySession(currentSessionToken)
+    if isValid.get("valid") == True:
+        username = isValid.get("username")
+        result = await auth.countSessions(username)
+        print(result)
+        
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
 
 #server endpoints
 @app.get("/status")

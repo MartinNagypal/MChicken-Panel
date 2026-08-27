@@ -19,6 +19,10 @@ async function showErrorMessage(error){
 }
 
 authLoginButton.addEventListener("click", async () => {
+    await login();
+});
+
+async function login(){
     const username = document.getElementById("usernameInput").value;
     const password = document.getElementById("passwordInput").value;
 
@@ -59,6 +63,12 @@ authLoginButton.addEventListener("click", async () => {
             await sleep(1000);
             await checkAuthStatus();
         }
+    }
+}
+
+document.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter") {
+        await login()
     }
 });
 

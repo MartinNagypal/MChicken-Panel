@@ -161,3 +161,11 @@ class AUTH:
         except Exception as e:
             print(f"Error in logoutAllSessions: {e}")
             return {"error": str(e)}
+        
+    async def countSessions(self, username:str):
+        try: 
+            count = await self.__db.execute("SELECT COUNT(*) FROM userSession WHERE username = ? GROUP BY username", (username,))
+            return {"count": count}
+        except Exception as e:
+            print(f'Error in countSessions: {e}')
+            return {"error": str(e)}
