@@ -160,6 +160,10 @@ buttonStartStop.addEventListener('click', async() => {
     }
 });
 
+buttonBackup.addEventListener('click', async() => {
+    await showInfoScreen("Backup functionality is not implemented yet", false);    
+});
+
 async function showInfoScreen(message, success = false) {
     const infoScreen = document.getElementById("infoScreen");
     const infoScreenText = document.getElementById("infoScreenText");
@@ -173,3 +177,5 @@ async function showInfoScreen(message, success = false) {
 
     infoScreen.classList.remove("infoScreenVisible");
 }
+
+

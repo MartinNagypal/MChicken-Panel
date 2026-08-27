@@ -21,5 +21,6 @@ class errorMessage:
         self.serverRestartFailed = "Operation Server restart failed."
         self.serverDataUnavailable = "The Server information could not be retrieved."
         self.serverCommandFailed = "The server command could not be executed."
+        self.noPermission = "You do not have permission to perform this action."
         
         

@@ -145,6 +145,7 @@ authConfirmButton.addEventListener("click", async () => {
                 await showErrorMessage(data.detail);
             }
             else{
+                document.getElementById("authContainer").classList.remove("authContainerRed");
                 document.getElementById("authContainer").classList.add("authContainerGreen");
                 await sleep(1000);
                 await checkAuthStatus();

@@ -128,3 +128,20 @@ class AUTH:
             return {"valid": True}
         else:
             return {"valid": False}
+        
+    async def getUserRole(self, sessionToken: str):
+        try:
+            hashedSessionToken = self.__encryption.hashSessionToken(sessionToken)
+            userId = await self.__db.fetchone("SELECT userId FROM userSession WHERE sessionToken = ?", (hashedSessionToken,))
+            if userId:
+                userId = userId[0]
+                role = await self.__db.fetchone("SELECT role FROM systemUser WHERE userId = ?", (userId,))
+                if role:
+                    return {"role": role[0]}
+                else:
+                    return {"error": "User not found."}
+            else:
+                return {"error": "Session not found."}
+        except Exception as e:
+            print(f"Error in getUserRole: {e}")
+            return {"error": str(e)}

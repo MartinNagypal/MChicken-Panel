@@ -281,6 +281,12 @@ async def serverStartStop(request: Request):
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
         try:
             status = await ssh.run(f'docker ps | grep {dockerContainerName}')
             if 'healthy' in status.stdout:
@@ -302,6 +308,12 @@ async def serverRestart(request: Request):
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
         try:
             await ssh.runInDir(serverDirectory, f'docker restart {dockerContainerName}')
             return {"message": "Server restart command executed successfully."}
@@ -405,6 +417,12 @@ async def sendCommand(command:models.commandInput, request: Request):
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+
         try:
             await rcon.updateRconPassword()
             response = await rcon.run(command.command)
@@ -422,6 +440,12 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request):
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
         try:
             testSSH = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
             try:
