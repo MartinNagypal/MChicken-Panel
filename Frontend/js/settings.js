@@ -3,9 +3,35 @@ const sshPort = document.getElementById("sshPort");
 const sshUsername = document.getElementById("sshUsername");
 const sshPassword = document.getElementById("sshPassword");
 const serverSetupTabSSHSubmit = document.getElementById("serverSetupTabSSHSubmit");
+const buttonLogoutAllSessions = document.getElementById("buttonLogoutAllSessions");
+let username;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function checkAuthStatus(){
+    try{
+        result = await fetch("http://127.0.0.1:8000/verifySession", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        const data = await result.json();
+        console.log(data);
+        if(!result.ok){
+            window.location.href = "../pages/auth.html";
+        }
+        else{
+            await fetchUsername();
+        }
+    }
+    catch (error) {
+        window.location.href = "../pages/auth.html";
+        console.error("Error checking authentication status:", error);
+    }
 }
 
 serverSetupTabSSHSubmit.addEventListener("click", async () => {
@@ -100,6 +126,10 @@ async function fetchAllUsers() {
                 deleteUserButton.classList.add("fa-solid", "fa-trash");
                 deleteUserButton.style.color = "var(--status-danger)";
                 userItem.appendChild(deleteUserButton);
+
+                deleteUserButton.addEventListener("click", () => {
+                    console.log("deleting: " + user.username);
+                });
             }
         }
     }
@@ -107,5 +137,41 @@ async function fetchAllUsers() {
         console.error('Error fetching users:', error);
     }
 }
+
+async function fetchUsername() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/user/username", {
+            method: "GET",
+            credentials: "include"
+        });
+        const data = await response.json();
+        if (response.ok) {
+            username = data.username;
+        }
+    } catch (error) {
+        console.error("Error fetching username:", error);
+        throw error;
+    }
+}
+
+buttonLogoutAllSessions.addEventListener("click", async () => {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/logout/all", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        const result = await response.json();
+        if (response.ok) {
+            await showInfoScreen("Successfully logged out from all sessions.", true);
+            sleep(2000);
+            await checkAuthStatus();
+        }
+    } catch (error) {
+        console.error("Error logging out all sessions:", error);
+    }
+});
 
 fetchAllUsers();

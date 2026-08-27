@@ -64,6 +64,12 @@
     gap: 5pt;
 }
 
+.serverSetupTabTitle{
+    font-size: 12pt;
+    color: var(--text-color-secondary);
+    font-weight: bold;
+}
+
 .serverSetupTabSubtitle{
     font-size: 10pt;
     color: var(--text-color);
@@ -164,6 +170,10 @@
     border-radius: 7.5pt;  
     background-color: var(--color-background); 
     font-weight: bold;
+
+    i {
+        transition: all 0.15s ease-in-out;
+    }
 }
 
 .userSettingsUserItem span{
@@ -176,6 +186,11 @@
     flex-direction: row;
     gap: 10pt;
     align-items: center;
+}
+
+.userSettingsUserItem i:active{
+    transform: scale(0.9);
+    text-shadow: 0 0 5pt var(--status-danger);
 }
 
 #addUserSpan{

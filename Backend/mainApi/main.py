@@ -197,6 +197,21 @@ async def logout(request: Request, response: Response):
     response.delete_cookie("sessionToken", path="/")
     return {"message": result.get("message")}
 
+@app.post("/logout/all")
+async def logoutAll(request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    if not currentSessionToken:
+        raise HTTPException(status_code=401, detail=error.noActiveSession)   
+    
+    isValid = await auth.verifySession(currentSessionToken)
+    if isValid.get("valid")== True:
+        username = isValid.get("username")
+        result = await auth.logoutAllSessions(username)
+        response.delete_cookie("sessionToken", path="/")
+        return {"message": error.logoutAllSuccess}
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
 @app.get("/users")
 async def getUsers(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")

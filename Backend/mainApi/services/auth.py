@@ -153,3 +153,11 @@ class AUTH:
         except Exception as e:
             print(f"Error in getAllUsers: {e}")
             return {"error": str(e)}
+        
+    async def logoutAllSessions(self, username: str):
+        try:
+            await self.__db.execute("DELETE FROM userSession WHERE username = ?", (username,))
+            return {"message": "Logged out from all sessions successfully."}
+        except Exception as e:
+            print(f"Error in logoutAllSessions: {e}")
+            return {"error": str(e)}

@@ -22,5 +22,6 @@ class errorMessage:
         self.serverDataUnavailable = "The Server information could not be retrieved."
         self.serverCommandFailed = "The server command could not be executed."
         self.noPermission = "You do not have permission to perform this action."
+        self.logoutAllSuccess = "Succesfully has been logged out from all sessions."
         
         

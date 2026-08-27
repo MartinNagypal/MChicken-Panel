@@ -50,6 +50,8 @@
                 <div class="settingsTabTitle">Server Setup <hr class="hrSplitter" style="width: 100% !important;"></div>
                 <div class="serverSetupTabs">
                     <div class="serverSetupTab">
+                        <span class="serverSetupTabTitle">SSH Setup</span>
+                        <hr class="hrSplitter" style="width: 100% !important;">
                         <span class="serverSetupTabSubtitle">SSH IP / PORT</span>
                         <div id="sshIpPort">
                             <input id="sshIp" placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
@@ -62,6 +64,8 @@
                         <span class="serverSetupSubmit" id="serverSetupTabSSHSubmit">Submit</span>
                     </div>
                     <div class="serverSetupTab">
+                        <span class="serverSetupTabTitle">RCON Setup</span>
+                        <hr class="hrSplitter" style="width: 100% !important;">
                         <span class="serverSetupTabSubtitle">RCON IP / PORT</span>
                         <div id="rconIpPort">
                             <input placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
@@ -70,12 +74,13 @@
                         <span class="serverSetupSubmit" id="serverSetupTabRCONSubmit">Submit</span>
                     </div>
                     <div class="serverSetupTab">
+                        <span class="serverSetupTabTitle">Account</span>
+                        <hr class="hrSplitter" style="width: 100% !important;">
                         <span class="serverSetupTabSubtitle">USERNAME</span>
                         <span class="accountSpan"> martin04lel </span>
                         <span class="serverSetupTabSubtitle">ROLE</span>
                         <span class="accountSpan"> admin </span>
-                        <span class="serverSetupDanger">Logout all Sessions</span>
-
+                        <span class="serverSetupDanger" id="buttonLogoutAllSessions">Logout all Sessions</span>
                     </div>
                 </div>
             </div>

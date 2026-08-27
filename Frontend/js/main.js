@@ -32,14 +32,14 @@ async function checkAuthStatus(){
     }
 }
 
-async function checkAuthEvery30Seconds(){
+async function checkAuthContinuerly(){
     while(true){
         await checkAuthStatus();
-        await sleep(30000);
+        await sleep(10000);
     }
 }
 
-checkAuthEvery30Seconds();
+checkAuthContinuerly();
 
 
 dashboardButton.addEventListener("click", () => {
@@ -97,7 +97,6 @@ async function fetchUsername() {
             credentials: "include"
         });
         const data = await response.json();
-        console.log(data.username);
         if (response.ok) {
             document.getElementById("sidePanelUsername").textContent = data.username;
         }
