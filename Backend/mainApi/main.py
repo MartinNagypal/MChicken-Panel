@@ -197,6 +197,22 @@ async def logout(request: Request, response: Response):
     response.delete_cookie("sessionToken", path="/")
     return {"message": result.get("message")}
 
+@app.get("/users")
+async def getUsers(request: Request):
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
+        users = await auth.getAllUsers()
+        return {"users": users}
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
 
 #server endpoints
 @app.get("/status")

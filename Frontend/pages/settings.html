@@ -67,28 +67,27 @@
                             <input placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
                             <input placeholder="25575" class="mainInputStyle" style="width: 50pt;">
                         </div>
-                        <span class="serverSetupTabSubtitle">Server Directory</span>
-                        <input placeholder="/path/to/server" class="mainInputStyle">
-                        <span class="serverSetupTabSubtitle">Server Data Directory</span>
-                        <input placeholder="/path/to/server/data" class="mainInputStyle">
                         <span class="serverSetupSubmit" id="serverSetupTabRCONSubmit">Submit</span>
+                    </div>
+                    <div class="serverSetupTab">
+                        <span class="serverSetupTabSubtitle">USERNAME</span>
+                        <span class="accountSpan"> martin04lel </span>
+                        <span class="serverSetupTabSubtitle">ROLE</span>
+                        <span class="accountSpan"> admin </span>
+                        <span class="serverSetupDanger">Logout all Sessions</span>
+
                     </div>
                 </div>
             </div>
 
             <div class="settingsTab">
                 <div class="settingsTabTitle">Users <hr class="hrSplitter" style="width: 100% !important;"></div>
-                <div class="userSettingsList">
+                <div class="userSettingsList" id="userSettingsList">
                     <div id="addUserItem" class="userSettingsUserItem">
                         <div id="addUserSpan">
                             <i class="fa-solid fa-user-plus" style="color: var(--accent-primary);"></i>
                             <span>Add User</span>
                         </div>
-                    </div>
-                    <div class="userSettingsUserItem">
-                        <span class="userSettingsUserItemName"><i class="fa-solid fa-circle-user" style="color: var(--accent-primary);"></i><span>Username</span></span>
-                        <span>Role</span>
-                        <i class="fa-solid fa-trash" style="color: var(--status-danger);"></i>
                     </div>
                 </div>
             </div>

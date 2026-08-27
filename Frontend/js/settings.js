@@ -68,3 +68,44 @@ async function showInfoScreen(message, success = false) {
 
     infoScreen.classList.remove("infoScreenVisible");
 }
+
+async function fetchAllUsers() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/users", {
+            method: "GET",
+            credentials: "include"
+        });
+        const data = await response.json();
+        if(response.ok){
+            console.log(data);
+            const userSettingsList = document.getElementById("userSettingsList");
+            for (const user of data.users.users) {
+                const userItem = document.createElement("div");
+                userItem.classList.add("userSettingsUserItem");
+                userSettingsList.appendChild(userItem);
+                const userItemSpan = document.createElement("span");
+                const userProfileIcon = document.createElement("i");
+                const usernameSpan = document.createElement("span");
+                userItemSpan.classList.add("userSettingsUserItemName");
+                userProfileIcon.classList.add("fa-solid", "fa-user");
+                userProfileIcon.style.color = "var(--accent-primary)";
+                usernameSpan.textContent = user.username;
+                userItemSpan.appendChild(userProfileIcon);
+                userItemSpan.appendChild(usernameSpan);
+                userItem.appendChild(userItemSpan);
+                const roleSpan = document.createElement("span");
+                roleSpan.textContent = user.role;
+                userItem.appendChild(roleSpan);
+                const deleteUserButton = document.createElement("i");
+                deleteUserButton.classList.add("fa-solid", "fa-trash");
+                deleteUserButton.style.color = "var(--status-danger)";
+                userItem.appendChild(deleteUserButton);
+            }
+        }
+    }
+    catch (error) {
+        console.error('Error fetching users:', error);
+    }
+}
+
+fetchAllUsers();

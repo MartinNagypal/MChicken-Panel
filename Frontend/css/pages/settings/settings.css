@@ -52,7 +52,7 @@
     
     display:flex;
     flex-direction: column;
-    gap: 5pt;
+    gap: 7.5pt;
     align-items: center;
 
     font-size: 12pt;
@@ -71,13 +71,47 @@
     margin-top: 5pt;
 }
 
+.accountSpan{
+    font-size: 12pt;
+    font-weight: bold;
+    color: var(--text-color-secondary);
+    border-bottom: 1.5pt solid var(--accent-primary);
+    padding-left: 7.5pt;
+    padding-right: 7.5pt;
+    margin-bottom: 5pt;
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+}
+
 .serverSetupSubmit{
     line-height: 1;
     padding: 5pt 10pt;
-    margin-top: 10pt;
+    margin-top: auto;
     border-style: solid;
     border-width: 1.5pt;
     border-color: var(--accent-primary);
+    border-radius: 7.5pt;
+    font-size: 12pt;
+    font-weight: bold;
+    cursor: pointer;
+
+    display:flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 5pt;
+    transition: all 0.2s ease-in-out;
+}
+
+.serverSetupDanger{
+    line-height: 1;
+    padding: 5pt 10pt;
+    margin-top: auto;
+    border-style: solid;
+    border-width: 1.5pt;
+    border-color: var(--status-danger);
     border-radius: 7.5pt;
     font-size: 12pt;
     font-weight: bold;
@@ -96,8 +130,17 @@
     color: var(--color-background);
 }
 
+.serverSetupDanger:hover{
+    background-color: var(--status-danger);
+    color: var(--color-background);
+}
+
 
 .serverSetupSubmit:active{
+    transform: scale(0.9);
+}
+
+.serverSetupDanger:active{
     transform: scale(0.9);
 }
 
@@ -111,11 +154,9 @@
 
 .userSettingsUserItem{
     padding: 10pt;
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
     gap: 10pt;
-    align-items: center;
-    justify-content: space-between;
 
     border-style: solid;
     border-width: 1.5pt;

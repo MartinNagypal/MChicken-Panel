@@ -145,3 +145,11 @@ class AUTH:
         except Exception as e:
             print(f"Error in getUserRole: {e}")
             return {"error": str(e)}
+        
+    async def getAllUsers(self):
+        try:
+            users = await self.__db.fetchall("SELECT userId, username, role FROM systemUser")
+            return {"users": [{"userId": user[0], "username": user[1], "role": user[2]} for user in users]}
+        except Exception as e:
+            print(f"Error in getAllUsers: {e}")
+            return {"error": str(e)}
