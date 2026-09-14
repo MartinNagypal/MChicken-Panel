@@ -78,6 +78,9 @@ const successWords = [
     "OK",
     "DONE",
     "SUCCESSFULLY",
+    "MADE",
+    "Made",
+    "made",
 
     "FOR HELP, TYPE \"HELP\"",
     "STARTING MINECRAFT SERVER",
@@ -137,7 +140,7 @@ socket.onmessage = (event) => {
     const line = document.createElement('div');
     line.textContent = event.data;
     checkLineStatus(event.data, line);
-    if(event.data.includes("RCON")){
+    if(event.data.includes("RCON") || event.data.includes("Rcon") || event.data.includes("rcon")){
         pass;
     }
     console.appendChild(line);
