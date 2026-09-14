@@ -5,7 +5,8 @@
     border-color: var(--border-color);
     border-radius: 7.5pt;
     padding: 10pt;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 
     display:flex;
     flex-direction: column;
