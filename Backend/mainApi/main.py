@@ -242,6 +242,46 @@ async def sessionCount(request: Request, response: Response):
         
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
+    
+    
+@app.post("/user/verifyPassword")
+async def verifyPassword(password: models.password, request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        username = await auth.getUsernameBySession(currentSessionToken)
+        username = username.get("username")
+        result = await auth.verifyPassword(username, password.password)
+        if result.get("valid") == True:
+            return {"valid": True}
+        else:
+            raise HTTPException(status_code=401, detail=error.invalidPassword)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+    
+@app.post("/user/delete")
+async def deleteUser(username: models.username, request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        currentUsername = await auth.getUsernameBySession(currentSessionToken)
+        currentUsername = currentUsername.get("username")
+        if currentUsername == username.username:
+            raise HTTPException(status_code=403, detail="You cannot delete your own account.")
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
+        result = await auth.deleteUser(username.username)
+        if result.get("error"):
+            raise HTTPException(status_code=500, detail=error.userDeletionError)
+        else:
+            return {"message": result.get("message")}
+    
+    
 
 #server endpoints
 @app.get("/status")

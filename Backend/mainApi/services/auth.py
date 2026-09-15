@@ -98,6 +98,20 @@ class AUTH:
         except Exception as e:
             return {"error": str(e)}
         
+    async def verifyPassword(self, username: str, password: str):
+        try:
+            user = await self.__db.fetchone("SELECT * FROM systemUser WHERE username = ?", (username,))
+            if user:
+                hashedPassword = user[2]
+                if self.__encryption.verifyPassword(password, hashedPassword):
+                    return {"valid": True}
+                else:
+                    return {"valid": False, "error": "Invalid password."}
+            else:
+                return {"valid": False, "error": "User not found."}
+        except Exception as e:
+            return {"valid": False, "error": str(e)}
+        
     async def isFirstUser(self):
         doesTableExist = await self.__db.exists("systemUser")
         if doesTableExist == True:
@@ -154,6 +168,18 @@ class AUTH:
             print(f"Error in getAllUsers: {e}")
             return {"error": str(e)}
         
+    async def getUsernameBySession(self, sessionToken: str):
+        try:
+            hashedSessionToken = self.__encryption.hashSessionToken(sessionToken)
+            username = await self.__db.fetchone("SELECT username FROM userSession WHERE sessionToken = ?", (hashedSessionToken,))
+            if username:
+                return {"username": username[0]}
+            else:
+                return {"error": "Session not found."}
+        except Exception as e:
+            print(f"Error in getUsername: {e}")
+            return {"error": str(e)}
+        
     async def logoutAllSessions(self, username: str):
         try:
             await self.__db.execute("DELETE FROM userSession WHERE username = ?", (username,))
@@ -168,4 +194,13 @@ class AUTH:
             return {"count": count}
         except Exception as e:
             print(f'Error in countSessions: {e}')
+            return {"error": str(e)}
+        
+    async def deleteUser(self, username: str):
+        try:
+            await self.__db.execute("DELETE FROM systemUser WHERE username = ?", (username,))
+            await self.logoutAllSessions(username)
+            return {"message": "User deleted successfully."}
+        except Exception as e:
+            print(f"Error in deleteUser: {e}")
             return {"error": str(e)}

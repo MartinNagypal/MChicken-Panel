@@ -4,6 +4,9 @@ const sshUsername = document.getElementById("sshUsername");
 const sshPassword = document.getElementById("sshPassword");
 const serverSetupTabSSHSubmit = document.getElementById("serverSetupTabSSHSubmit");
 const buttonLogoutAllSessions = document.getElementById("buttonLogoutAllSessions");
+const buttonDeleteUserScreenClose = document.getElementById("buttonDeleteUserScreenClose");
+const buttonDeleteUserScreenConfirm = document.getElementById("buttonDeleteUserScreenConfirm");
+const confirmDeletionPasswordInput = document.getElementById("confirmDeletionPasswordInput");
 let username;
 
 function sleep(ms) {
@@ -127,14 +130,39 @@ async function fetchAllUsers() {
                 deleteUserButton.style.color = "var(--status-danger)";
                 userItem.appendChild(deleteUserButton);
 
-                deleteUserButton.addEventListener("click", () => {
-                    console.log("deleting: " + user.username);
+                deleteUserButton.addEventListener("click", async () => {
+                    const deletUserScreen = document.getElementById("deleteUserScreen");
+                    deletUserScreen.classList.remove("infoScreenPopupHidden");
                 });
             }
         }
     }
     catch (error) {
         console.error('Error fetching users:', error);
+    }
+}
+
+async function deleteUser(username) {
+    try {
+        const deleteResponse = await fetch("http://127.0.0.1:8000/user/delete", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username: user.username })
+        });
+        const responseData = await deleteResponse.json();
+        if (deleteResponse.ok) {
+            userItem.remove();
+            await showInfoScreen("User deleted successfully.", true);
+        }
+        else {
+            await showInfoScreen(responseData.detail, false);
+        }
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        throw error;
     }
 }
 
@@ -171,6 +199,43 @@ buttonLogoutAllSessions.addEventListener("click", async () => {
         }
     } catch (error) {
         console.error("Error logging out all sessions:", error);
+    }
+});
+
+buttonDeleteUserScreenClose.addEventListener("click", () => {
+    const deletUserScreen = document.getElementById("deleteUserScreen");
+    deletUserScreen.classList.add("infoScreenPopupHidden");
+});
+
+buttonDeleteUserScreenConfirm.addEventListener("click", async () => {
+    let confirmDeletionPassword = confirmDeletionPasswordInput.value;
+    const response = await fetch("http://127.0.0.1:8000/user/verifyPassword", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ password: confirmDeletionPassword })
+    });
+    const result = await response.json();
+    if (response.ok) {
+        confirmDeletionPasswordInput.classList.remove("mainInputStyleFalse");
+        confirmDeletionPasswordInput.classList.add("mainInputStyleTrue");
+        await deleteUser(username);
+        const deletUserScreen = document.getElementById("deleteUserScreen");
+        deletUserScreen.classList.add("infoScreenPopupHidden");
+        showInfoScreen("User deleted successfully.", true);
+    } else {
+        showInfoScreen("The password you entered is invalid. Please try again.", false);
+        confirmDeletionPasswordInput.classList.add("mainInputStyleFalse");
+    }
+});
+
+
+document.addEventListener("keydown", async (event) => {
+    if (event.key === "Escape") {
+        const deletUserScreen = document.getElementById("deleteUserScreen");
+        deletUserScreen.classList.add("infoScreenPopupHidden");
     }
 });
 

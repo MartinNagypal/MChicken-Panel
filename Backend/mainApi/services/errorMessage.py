@@ -23,5 +23,7 @@ class errorMessage:
         self.serverCommandFailed = "The server command could not be executed."
         self.noPermission = "You do not have permission to perform this action."
         self.logoutAllSuccess = "Succesfully has been logged out from all sessions."
+        self.userDeletionError = "The user could not be deleted. Please try again later."
+        self.invalidPassword = "The password you entered is invalid. Please try again."
         
         

@@ -12,3 +12,9 @@ class sshConfig(BaseModel):
 class userInput(BaseModel):
     username: str
     password: str
+    
+class username(BaseModel):
+    username: str
+    
+class password(BaseModel):
+    password: str
