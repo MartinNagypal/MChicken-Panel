@@ -160,6 +160,17 @@ class AUTH:
             print(f"Error in getUserRole: {e}")
             return {"error": str(e)}
         
+    async def getUserRoleByUsername(self, username: str):
+        try:
+            role = await self.__db.fetchone("SELECT role FROM systemUser WHERE username = ?", (username,))
+            if role:
+                return {"role": role[0]}
+            else:
+                return {"error": "User not found."}
+        except Exception as e:
+            print(f"Error in getUserRoleByUsername: {e}")
+            return {"error": str(e)}
+        
     async def getAllUsers(self):
         try:
             users = await self.__db.fetchall("SELECT userId, username, role FROM systemUser")

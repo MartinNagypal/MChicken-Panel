@@ -109,7 +109,7 @@ async function fetchAllUsers() {
         const data = await response.json();
 
         let userElements = document.getElementsByClassName("userSettingsUserItem");
-        while (userElements.length > 0) {
+        while (userElements.length > 1) {
             userElements[0].parentNode.removeChild(userElements[0]);
         }
 
@@ -130,9 +130,41 @@ async function fetchAllUsers() {
                 userItemSpan.appendChild(userProfileIcon);
                 userItemSpan.appendChild(usernameSpan);
                 userItem.appendChild(userItemSpan);
-                const roleSpan = document.createElement("span");
-                roleSpan.textContent = user.role;
-                userItem.appendChild(roleSpan);
+
+                const initiatorRoleResponse = await fetch("http://127.0.0.1:8000/user/role/session", {
+                    method: "GET",
+                    credentials: "include"
+                });
+                const initiatorRoleData = await initiatorRoleResponse.json();
+                const initiatorRole = initiatorRoleData.role;
+                if(initiatorRole === "admin"){
+                    const roleSelect = document.createElement("select");
+                    roleSelect.classList.add("mainSelectStyle");
+                    roleSelect.style.maxWidth = "100px";
+                    const roleOption1 = document.createElement("option");
+                    roleOption1.value = "admin";
+                    roleOption1.textContent = "Admin";
+
+                    const roleOption2 = document.createElement("option");
+                    roleOption2.value = "mod";
+                    roleOption2.textContent = "Mod";
+
+                    const roleOption3 = document.createElement("option");
+                    roleOption3.value = "user";
+                    roleOption3.textContent = "User";
+
+                    roleSelect.appendChild(roleOption1);
+                    roleSelect.appendChild(roleOption2);
+                    roleSelect.appendChild(roleOption3);
+
+                    roleSelect.value = user.role;
+                    userItem.appendChild(roleSelect);
+                }
+                else{
+                    const roleSpan = document.createElement("span");
+                    roleSpan.textContent = user.role;
+                    userItem.appendChild(roleSpan);
+                }
                 const deleteUserButton = document.createElement("i");
                 deleteUserButton.classList.add("fa-solid", "fa-trash");
                 deleteUserButton.style.color = "var(--status-danger)";
@@ -144,6 +176,9 @@ async function fetchAllUsers() {
                     deletUserScreen.classList.remove("infoScreenPopupHidden");
                 });
             }
+        }
+        else {
+            document.getElementById("userSettingsTab").style.display = "none";
         }
     }
     catch (error) {

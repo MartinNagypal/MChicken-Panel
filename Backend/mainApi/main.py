@@ -280,6 +280,22 @@ async def deleteUser(username: models.username, request: Request, response: Resp
             raise HTTPException(status_code=500, detail=error.userDeletionError)
         else:
             return {"message": result.get("message")}
+        
+@app.get("/user/role/session")
+async def getUserRole(request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        username = await auth.getUsernameBySession(currentSessionToken)
+        username = username.get("username")
+        role = await auth.getUserRoleByUsername(username)
+        role = role.get("role")
+        return{"role": role}
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
+        
     
     
 
