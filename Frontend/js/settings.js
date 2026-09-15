@@ -8,6 +8,8 @@ const buttonDeleteUserScreenClose = document.getElementById("buttonDeleteUserScr
 const buttonDeleteUserScreenConfirm = document.getElementById("buttonDeleteUserScreenConfirm");
 const confirmDeletionPasswordInput = document.getElementById("confirmDeletionPasswordInput");
 let username;
+let deleteUsername;
+
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -105,6 +107,12 @@ async function fetchAllUsers() {
             credentials: "include"
         });
         const data = await response.json();
+
+        let userElements = document.getElementsByClassName("userSettingsUserItem");
+        while (userElements.length > 0) {
+            userElements[0].parentNode.removeChild(userElements[0]);
+        }
+
         if(response.ok){
             console.log(data);
             const userSettingsList = document.getElementById("userSettingsList");
@@ -132,6 +140,7 @@ async function fetchAllUsers() {
 
                 deleteUserButton.addEventListener("click", async () => {
                     const deletUserScreen = document.getElementById("deleteUserScreen");
+                    deleteUsername = user.username;
                     deletUserScreen.classList.remove("infoScreenPopupHidden");
                 });
             }
@@ -150,11 +159,14 @@ async function deleteUser(username) {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ username: user.username })
+            body: JSON.stringify({ username: username })
         });
         const responseData = await deleteResponse.json();
         if (deleteResponse.ok) {
-            userItem.remove();
+            confirmDeletionPasswordInput.value = "";
+            const deletUserScreen = document.getElementById("deleteUserScreen");
+            await fetchAllUsers();
+            deletUserScreen.classList.add("infoScreenPopupHidden");
             await showInfoScreen("User deleted successfully.", true);
         }
         else {
@@ -218,14 +230,16 @@ buttonDeleteUserScreenConfirm.addEventListener("click", async () => {
         body: JSON.stringify({ password: confirmDeletionPassword })
     });
     const result = await response.json();
+    console.log(result);
     if (response.ok) {
         confirmDeletionPasswordInput.classList.remove("mainInputStyleFalse");
         confirmDeletionPasswordInput.classList.add("mainInputStyleTrue");
-        await deleteUser(username);
+        await deleteUser(deleteUsername);
+        deleteUsername = null;
         const deletUserScreen = document.getElementById("deleteUserScreen");
         deletUserScreen.classList.add("infoScreenPopupHidden");
-        showInfoScreen("User deleted successfully.", true);
     } else {
+        confirmDeletionPasswordInput.value = "";
         showInfoScreen("The password you entered is invalid. Please try again.", false);
         confirmDeletionPasswordInput.classList.add("mainInputStyleFalse");
     }
