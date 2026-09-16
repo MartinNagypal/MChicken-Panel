@@ -197,6 +197,9 @@
 
     i {
         transition: all 0.15s ease-in-out;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
     }
 }
 
