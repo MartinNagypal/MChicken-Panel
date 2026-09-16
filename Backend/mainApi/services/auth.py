@@ -6,13 +6,14 @@ class AUTH:
         self.__encryption = encryption
         self.__sessionExpirationHours = sessionExpirationHours
 
-    async def register(self, username: str, password: str, role:str):
+    async def register(self, username: str, password: str, role:str, isFirstUser: bool = False):
         await self.__db.execute("""
             CREATE TABLE IF NOT EXISTS systemUser(
                 userId INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
-                role TEXT NOT NULL
+                role TEXT NOT NULL,
+                isFirstUser BOOLEAN NOT NULL DEFAULT 0
             )
         """)
         
@@ -21,7 +22,7 @@ class AUTH:
         if doesUserExist:
             return {"error": "1"}
         else:
-            await self.__db.execute("INSERT INTO systemUser (username, password, role) VALUES (?, ?, ?)", (username, encryptedPassword, role))
+            await self.__db.execute("INSERT INTO systemUser (username, password, role, isFirstUser) VALUES (?, ?, ?, ?)", (username, encryptedPassword, role, isFirstUser))
             session = await self.createSession(username)
             sessionToken = session.get("sessionToken")
             return {"message": "User registered successfully.", "sessionToken": sessionToken, "sessionExpirationHours": self.__sessionExpirationHours}
@@ -222,4 +223,21 @@ class AUTH:
             return {"message": "User role updated successfully."}
         except Exception as e:
             print(f"Error in updateUserRole: {e}")
+            return {"error": str(e)}
+        
+    async def isFirstUserBySession(self, sessionToken: str):
+        try:
+            hashedSessionToken = self.__encryption.hashSessionToken(sessionToken)
+            userId = await self.__db.fetchone("SELECT userId FROM userSession WHERE sessionToken = ?", (hashedSessionToken,))
+            if userId:
+                userId = userId[0]
+                isFirstUser = await self.__db.fetchone("SELECT isFirstUser FROM systemUser WHERE userId = ?", (userId,))
+                if isFirstUser:
+                    return {"isFirstUser": bool(isFirstUser[0])}
+                else:
+                    return {"error": "User not found."}
+            else:
+                return {"error": "Session not found."}
+        except Exception as e:
+            print(f"Error in isUserFirstUserBySession: {e}")
             return {"error": str(e)}

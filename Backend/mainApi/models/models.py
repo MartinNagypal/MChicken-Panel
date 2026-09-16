@@ -27,3 +27,8 @@ class roleUpdate(BaseModel):
     username: str
     newRole: str
     password: str
+    
+class createUserInput(BaseModel):
+    username: str
+    password: str
+    role: str

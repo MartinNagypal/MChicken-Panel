@@ -20,7 +20,7 @@
 </head>
 <body class="mainPageBody"> 
     <div class="infoScreenPopup infoScreenPopupHidden" id="deleteUserScreen">
-        <div class="infoScreenConfirmationContent" id="deleteUserScreenContent">
+        <div class="infoScreenContent" id="deleteUserScreenContent">
             <span  class="infoScreenCloseButton" id="buttonDeleteUserScreenClose">x</span>
             <div>Are you sure you want to delete this user?</div>
             <div style="color: var(--status-danger)">Confirm Deletion</div>
@@ -30,13 +30,34 @@
     </div>
 
     <div class="infoScreenPopup infoScreenPopupHidden" id="confirmRoleChangesScreen">
-        <div class="infoScreenConfirmationContent">
+        <div class="infoScreenContent">
             <span  class="infoScreenCloseButton" id="buttonConfirmRoleChangesScreenClose">x</span>
             <div>Are you sure you want to confirm these changes?</div>
             <div style="color: var(--status-danger);">Confirm Changes</div>
             <input type="password" placeholder="Password" class="mainInputStyle" id="confirmRoleChangesPasswordInput"></input>
             <div class="serverSetupDanger" id="buttonConfirmRoleChanges">Confirm</div>
         </div>
+    </div>
+
+    <div class="infoScreenPopup infoScreenPopupHidden" id="addUserScreen">
+        <div class="infoScreenContent">
+            <span  class="infoScreenCloseButton" id="buttonAddUserPopupClose">x</span>
+            <div>Add new User</div>
+            <hr class="hrSplitter" style="width: 100% !important;">
+            <div>Username:</div>
+            <input type="text" placeholder="Username" class="mainInputStyle" id="addUserUsernameInput"></input>
+            <div>Password:</div>
+            <input type="password" placeholder="Password" class="mainInputStyle" id="addUserPasswordInput"></input>
+            <div>Role:</div>
+            <select class="mainInputStyle" id="addUserRoleSelect">
+                <option value="user">User</option>
+                <option value="mod">Mod</option>
+                <option value="admin">Admin</option>
+            </select>
+            <hr class="hrSplitter" style="width: 100% !important;">
+            <div class="serverSetupSubmit" id="buttonAddUserConfirm">Add User</div>
+        </div>
+
     </div>
 
     <div class="infoScreenHidden" id="infoScreen"><i class="fa-solid fa-circle-info"></i><span id="infoScreenText"></span></div>

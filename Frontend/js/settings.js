@@ -5,8 +5,8 @@ const sshPassword = document.getElementById("sshPassword");
 const serverSetupTabSSHSubmit = document.getElementById("serverSetupTabSSHSubmit");
 const buttonLogoutAllSessions = document.getElementById("buttonLogoutAllSessions");
 const buttonDeleteUserScreenClose = document.getElementById("buttonDeleteUserScreenClose");
+const buttonAddUser = document.getElementById("addUserItem");
 let username;
-let deleteUsername;
 
 
 function sleep(ms) {
@@ -207,8 +207,8 @@ async function fetchAllUsers() {
                             if (roleUpdateResult.ok) {
                                 passwordInput.classList.remove("mainInputStyleFalse");
                                 passwordInput.classList.add("mainInputStyleTrue");
-                                await showInfoScreen("User role updated successfully.", true);
                                 confirmRoleChangesScreen.classList.add("infoScreenPopupHidden");
+                                await showInfoScreen("User role updated successfully.", true);
                                 user.role = roleSelect.value;
                                 passwordInput.value = "";
                             } else {
@@ -247,9 +247,9 @@ async function fetchAllUsers() {
 
                         buttonDeleteUserScreenConfirm.addEventListener("click", async () => {
                             const password = confirmDeletionPasswordInput.value;
+                            deletUserScreen.classList.add("infoScreenPopupHidden");
                             await deleteUser(user.username, password);
                             confirmDeletionPasswordInput.value = "";
-                            deletUserScreen.classList.add("infoScreenPopupHidden");
                         });
 
                     });
@@ -297,6 +297,99 @@ async function deleteUser(username, password) {
     }
 }
 
+buttonAddUser.addEventListener("click", async () => {
+    const addUserScreen = document.getElementById("addUserScreen");
+    addUserScreen.classList.remove("infoScreenPopupHidden");
+
+
+    //close event listener
+    const closeButton = document.getElementById("buttonAddUserPopupClose");
+    closeButton.addEventListener("click", () => {
+        addUserScreen.classList.add("infoScreenPopupHidden");
+    });
+
+    document.addEventListener("keydown", async (event) => {
+        if (event.key === "Escape") {
+            addUserScreen.classList.add("infoScreenPopupHidden");
+        }
+    });
+
+    //validate username and password inputs
+    const buttonAddUserConfirm = document.getElementById("buttonAddUserConfirm");
+    buttonAddUserConfirm.addEventListener("click", async () => {
+        const usernameInput = document.getElementById("addUserUsernameInput");
+        const passwordInput = document.getElementById("addUserPasswordInput");
+
+        if(!validateUsername(usernameInput.value)){
+            usernameInput.classList.add("mainInputStyleFalse");
+        }
+        else{
+            usernameInput.classList.remove("mainInputStyleFalse");
+            usernameInput.classList.add("mainInputStyleTrue");
+        }
+
+        if(!validatePassword(passwordInput.value)){
+            passwordInput.classList.add("mainInputStyleFalse");
+        }
+        else{
+            passwordInput.classList.remove("mainInputStyleFalse");
+            passwordInput.classList.add("mainInputStyleTrue");
+        }
+
+        if(validateUsername(usernameInput.value) && validatePassword(passwordInput.value)){
+            const roleSelect = document.getElementById("addUserRoleSelect");
+            const newUsername = usernameInput.value;
+            const newPassword = passwordInput.value;
+            const newRole = roleSelect.value;
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/users/user/create", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        username: newUsername,
+                        password: newPassword,
+                        role: newRole
+                    })
+                });
+                if (response.ok) {
+                    addUserScreen.classList.add("infoScreenPopupHidden");
+                    await fetchAllUsers();
+                    await showInfoScreen("User created successfully.", true);
+                    usernameInput.value = "";
+                    passwordInput.value = "";
+                    roleSelect.value = "user";
+
+                } else {
+                    const data = await response.json();
+                    await showInfoScreen(data.detail, false);
+                }
+            } catch (error) {
+                console.error("Error creating user:", error);
+                await showInfoScreen("Error creating user. Please try again.", false);
+            }
+        }
+    });
+});
+
+function validatePassword(password){
+    const pwMinLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    return password.length >= pwMinLength && hasUpperCase && hasLowerCase && hasNumber;
+}
+
+function validateUsername(username){
+    const usernameMinLength = 4;
+    const usernameMaxLength = 16; 
+    return username.length >= usernameMinLength && username.length <= usernameMaxLength;
+}
+
 async function fetchUsername() {
     try {
         const response = await fetch("http://127.0.0.1:8000/user/username", {
@@ -341,7 +434,7 @@ buttonDeleteUserScreenClose.addEventListener("click", () => {
 document.addEventListener("keydown", async (event) => {
     if (event.key === "Escape") {
         const deletUserScreen = document.getElementById("deleteUserScreen");
-        deletUserScreen.classList.add("infoScreenPopupHidden");
+        deletUserScreen.classList.add("infoScreenPopup");
     }
 });
 

@@ -110,7 +110,7 @@ async def register(user: models.userInput, response: Response):
         if isPasswordValid.get("valid") == False:
             raise HTTPException(status_code=400, detail=error.passwordRequirementNotFulfilled)
         
-        result = await auth.register(user.username, user.password, role)
+        result = await auth.register(user.username, user.password, role, isFirstUser)
         #if resgistration was successful -> set cookie and return message
         if result.get("message"):
             sessionToken = result.get("sessionToken")
@@ -220,7 +220,8 @@ async def getUsers(request: Request):
     if isValidSession == True:
         role = await auth.getUserRole(currentSessionToken)
         role = role.get("role")
-        if role != "admin":
+        allowedRoles = ["admin", "mod"]
+        if role not in allowedRoles:
             raise HTTPException(status_code=403, detail=error.noPermission)
         
         users = await auth.getAllUsers()
@@ -239,6 +240,40 @@ async def getUserBySession(request: Request):
         role = await auth.getUserRoleByUsername(username)
         role = role.get("role")
         return {"username": username, "role": role}
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+    
+@app.post("/users/user/create")
+async def createUser(user: models.createUserInput, request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
+        isUsernameValid = await auth.validateUsername(user.username)
+        if isUsernameValid.get("valid") == False:
+            raise HTTPException(status_code=400, detail=error.usernameRequirementNotFulfilled)
+            
+        isPasswordValid = await auth.validatePassword(user.password)
+        if isPasswordValid.get("valid") == False:
+            raise HTTPException(status_code=400, detail=error.passwordRequirementNotFulfilled)
+        
+        roles = ["admin", "mod", "user"]
+        if user.role not in roles:
+            raise HTTPException(status_code=400, detail=error.invalidRole)
+        
+        result = await auth.register(user.username, user.password, user.role, False)
+        if result.get("message"):
+            return {"message": result.get("message")}
+        else:
+            if(result.get("error") == "1"):
+                raise HTTPException(status_code=409, detail=error.userAlreadyExists)
+            else:
+                raise HTTPException(status_code=500, detail=error.registrationFailed)
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
 
@@ -285,8 +320,14 @@ async def deleteUser(username: models.deleteUserInput, request: Request, respons
         currentRole = await auth.getUserRole(currentSessionToken)
         currentRole = currentRole.get("role")
         deleteUserRole = await auth.getUserRoleByUsername(username.username)
+        
         if currentRole == deleteUserRole.get("role"):
-            raise HTTPException(status_code=403, detail="You cannot delete a user with the same role as you.")
+            isFirstUser = await auth.isFirstUserBySession(currentSessionToken)
+            isFirstUser = isFirstUser.get("isFirstUser")
+            if not isFirstUser:
+                raise HTTPException(status_code=403, detail="You cannot delete a user with the same role as you.")
+            else:
+                pass
         
         if currentUsername == username.username:
             raise HTTPException(status_code=403, detail="You cannot delete your own account.")

@@ -19,7 +19,7 @@
     z-index: -5 !important;
 }
 
-.infoScreenConfirmationContent{
+.infoScreenContent{
     padding: 12.5pt;
     border: 1.5pt solid var(--border-color);
     border-radius: 7.5pt;
