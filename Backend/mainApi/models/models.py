@@ -18,3 +18,12 @@ class username(BaseModel):
     
 class password(BaseModel):
     password: str
+    
+class deleteUserInput(BaseModel):
+    username: str
+    password: str
+    
+class roleUpdate(BaseModel):
+    username: str
+    newRole: str
+    password: str

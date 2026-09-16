@@ -108,10 +108,10 @@ async function fetchAllUsers() {
         });
         const data = await response.json();
 
-        let userElements = document.getElementsByClassName("userSettingsUserItem");
+        const userElements = document.querySelectorAll(".userSettingsUserItem");
         for(const userElement of userElements){
             if(!userElement.classList.contains("addUserItem")){
-                userElement.remove;
+                userElement.remove();
             }
         }
 
@@ -146,7 +146,11 @@ async function fetchAllUsers() {
                 });
                 const initiatorRoleData = await initiatorRoleResponse.json();
                 const initiatorRole = initiatorRoleData.role;
+
+                //role selector for admin users to change roles of other users
                 if(initiatorRole === "admin" && user.username !== currentUserData.username){
+                    const roleSelectorDiv = document.createElement("div");
+                    roleSelectorDiv.classList.add("roleSelectorDiv");
                     const roleSelect = document.createElement("select");
                     roleSelect.classList.add("mainSelectStyle");
                     roleSelect.style.maxWidth = "100px";
@@ -167,7 +171,60 @@ async function fetchAllUsers() {
                     roleSelect.appendChild(roleOption3);
 
                     roleSelect.value = user.role;
-                    userItem.appendChild(roleSelect);
+                    roleSelectorDiv.appendChild(roleSelect);
+                    userItem.appendChild(roleSelectorDiv);
+
+
+                    roleSelect.addEventListener("change", async (event) => {
+                        const confirmRoleChangesScreen = document.getElementById("confirmRoleChangesScreen");
+                        confirmRoleChangesScreen.classList.remove("infoScreenPopupHidden");
+
+                        //implement close button
+                        const closeButton = document.getElementById("buttonConfirmRoleChangesScreenClose");
+                        closeButton.addEventListener("click", () => {
+                            confirmRoleChangesScreen.classList.add("infoScreenPopupHidden");
+                            roleSelect.value = user.role;
+                        });
+
+                        //implement confirm button
+                        const confirmButton = document.getElementById("buttonConfirmRoleChanges");
+                        passwordInput = document.getElementById("confirmRoleChangesPasswordInput");
+                        password = passwordInput.value;
+                        confirmButton.addEventListener("click", async () => {
+                            const passwordInput = document.getElementById("confirmRoleChangesPasswordInput");
+                            const password = passwordInput.value;
+                            const roleUpdateResult = await fetch("http://127.0.0.1:8000/user/role/update", {
+                                method: "POST",
+                                credentials: "include",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    username: user.username,
+                                    newRole: roleSelect.value,
+                                    password: password
+                                })
+                            });
+                            const roleUpdateData = await roleUpdateResult.json();
+                            if (roleUpdateResult.ok) {
+                                passwordInput.classList.remove("mainInputStyleFalse");
+                                passwordInput.classList.add("mainInputStyleTrue");
+                                await showInfoScreen("User role updated successfully.", true);
+                                confirmRoleChangesScreen.classList.add("infoScreenPopupHidden");
+                                user.role = roleSelect.value;
+                                passwordInput.value = "";
+                            } else {
+                                if(roleUpdateResult.status === 401){
+                                    passwordInput.value = "";
+                                    passwordInput.classList.add("mainInputStyleFalse");
+                                }
+                                await showInfoScreen(roleUpdateData.detail, false);
+                                roleSelect.value = user.role;
+                            }
+
+                        });             
+                    });
+
                 }
                 else{
                     const roleSpan = document.createElement("span");

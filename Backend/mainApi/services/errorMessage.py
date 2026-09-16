@@ -25,5 +25,6 @@ class errorMessage:
         self.logoutAllSuccess = "Succesfully has been logged out from all sessions."
         self.userDeletionError = "The user could not be deleted. Please try again later."
         self.invalidPassword = "The password you entered is invalid. Please try again."
+        self.userRoleUpdateError = "The user role could not be updated. Please try again later."
         
         

@@ -215,3 +215,11 @@ class AUTH:
         except Exception as e:
             print(f"Error in deleteUser: {e}")
             return {"error": str(e)}
+        
+    async def updateUserRole(self, username: str, newRole: str):
+        try:
+            await self.__db.execute("UPDATE systemUser SET role = ? WHERE username = ?", (newRole, username))
+            return {"message": "User role updated successfully."}
+        except Exception as e:
+            print(f"Error in updateUserRole: {e}")
+            return {"error": str(e)}

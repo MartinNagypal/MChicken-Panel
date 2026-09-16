@@ -18,3 +18,27 @@
     opacity: 0 !important;
     z-index: -5 !important;
 }
+
+.infoScreenConfirmationContent{
+    padding: 12.5pt;
+    border: 1.5pt solid var(--border-color);
+    border-radius: 7.5pt;
+    background-color: var(--surface-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10pt;
+    align-items: center;
+
+    div{
+        font-size: 12pt;
+        font-weight: bold;
+        color: var(--text-color);
+    }
+}
+
+.infoScreenCloseButton{
+    color: var(--text-color-secondary);
+    font-size: 12pt;
+    align-self: flex-start;
+    cursor: pointer;
+}

@@ -275,19 +275,30 @@ async def verifyPassword(password: models.password, request: Request, response: 
         raise HTTPException(status_code=401, detail=error.invalidSession)
     
 @app.post("/user/delete")
-async def deleteUser(username: models.username, request: Request, response: Response):
+async def deleteUser(username: models.deleteUserInput, request: Request, response: Response):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
     if isValidSession == True:
         currentUsername = await auth.getUsernameBySession(currentSessionToken)
         currentUsername = currentUsername.get("username")
+        currentRole = await auth.getUserRole(currentSessionToken)
+        currentRole = currentRole.get("role")
+        deleteUserRole = await auth.getUserRoleByUsername(username.username)
+        if currentRole == deleteUserRole.get("role"):
+            raise HTTPException(status_code=403, detail="You cannot delete a user with the same role as you.")
+        
         if currentUsername == username.username:
             raise HTTPException(status_code=403, detail="You cannot delete your own account.")
         role = await auth.getUserRole(currentSessionToken)
         role = role.get("role")
         if role != "admin":
             raise HTTPException(status_code=403, detail=error.noPermission)
+        
+        validPassword = await auth.verifyPassword(currentUsername, username.password)
+        validPassword = validPassword.get("valid")
+        if not validPassword:
+            raise HTTPException(status_code=401, detail=error.invalidPassword)
         
         result = await auth.deleteUser(username.username)
         if result.get("error"):
@@ -306,6 +317,38 @@ async def getUserRole(request: Request, response: Response):
         role = await auth.getUserRoleByUsername(username)
         role = role.get("role")
         return{"role": role}
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+    
+@app.post("/user/role/update")
+async def updateUserRole(roleUpdate: models.roleUpdate, request: Request, response: Response):
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        roles = ["admin", "mod", "user"]
+        if roleUpdate.newRole not in roles:
+            raise HTTPException(status_code=400, detail=error.invalidRole)
+        
+        currentUsername = await auth.getUsernameBySession(currentSessionToken)
+        currentUsername = currentUsername.get("username")
+        if currentUsername == roleUpdate.username:
+            raise HTTPException(status_code=403, detail="You cannot change your own role.")
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
+        validPassword = await auth.verifyPassword(currentUsername, roleUpdate.password)
+        validPassword = validPassword.get("valid")
+        if not validPassword:
+            raise HTTPException(status_code=401, detail=error.invalidPassword)
+        
+        result = await auth.updateUserRole(roleUpdate.username, roleUpdate.newRole)
+        if result.get("error"):
+            raise HTTPException(status_code=500, detail=error.userRoleUpdateError)
+        
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
 

@@ -26,6 +26,11 @@
     box-shadow: 0 0 3pt var(--status-danger);
 }
 
+.mainInputStyleTrue{
+    border-color: var(--status-success);
+    box-shadow: 0 0 3pt var(--status-success);
+}
+
 .mainSelectStyle{
     font-size: 10pt;
     font-weight: bold;
