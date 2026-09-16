@@ -109,8 +109,10 @@ async function fetchAllUsers() {
         const data = await response.json();
 
         let userElements = document.getElementsByClassName("userSettingsUserItem");
-        while (userElements.length > 1) {
-            userElements[0].parentNode.removeChild(userElements[0]);
+        for(const userElement of userElements){
+            if(!userElement.classList.contains("addUserItem")){
+                userElement.remove;
+            }
         }
 
         if(response.ok){
@@ -131,13 +133,20 @@ async function fetchAllUsers() {
                 userItemSpan.appendChild(usernameSpan);
                 userItem.appendChild(userItemSpan);
 
+                const currentUserResponse = await fetch("http://127.0.0.1:8000/users/user/session", {
+                    method: "GET",
+                    credentials: "include"
+                });
+                const currentUserData = await currentUserResponse.json();
+                console.log(currentUserData);
+
                 const initiatorRoleResponse = await fetch("http://127.0.0.1:8000/user/role/session", {
                     method: "GET",
                     credentials: "include"
                 });
                 const initiatorRoleData = await initiatorRoleResponse.json();
                 const initiatorRole = initiatorRoleData.role;
-                if(initiatorRole === "admin"){
+                if(initiatorRole === "admin" && user.username !== currentUserData.username){
                     const roleSelect = document.createElement("select");
                     roleSelect.classList.add("mainSelectStyle");
                     roleSelect.style.maxWidth = "100px";
@@ -165,16 +174,20 @@ async function fetchAllUsers() {
                     roleSpan.textContent = user.role;
                     userItem.appendChild(roleSpan);
                 }
-                const deleteUserButton = document.createElement("i");
-                deleteUserButton.classList.add("fa-solid", "fa-trash");
-                deleteUserButton.style.color = "var(--status-danger)";
-                userItem.appendChild(deleteUserButton);
+                
+                if(initiatorRole === "admin" && user.username !== currentUserData.username){
+                    const deleteUserButton = document.createElement("i");
+                    deleteUserButton.classList.add("fa-solid", "fa-trash");
+                    deleteUserButton.style.color = "var(--status-danger)";
+                    userItem.appendChild(deleteUserButton);
+                    
 
-                deleteUserButton.addEventListener("click", async () => {
-                    const deletUserScreen = document.getElementById("deleteUserScreen");
-                    deleteUsername = user.username;
-                    deletUserScreen.classList.remove("infoScreenPopupHidden");
-                });
+                    deleteUserButton.addEventListener("click", async () => {
+                        const deletUserScreen = document.getElementById("deleteUserScreen");
+                        deleteUsername = user.username;
+                        deletUserScreen.classList.remove("infoScreenPopupHidden");
+                    });
+                }
             }
         }
         else {
@@ -200,8 +213,8 @@ async function deleteUser(username) {
         if (deleteResponse.ok) {
             confirmDeletionPasswordInput.value = "";
             const deletUserScreen = document.getElementById("deleteUserScreen");
-            await fetchAllUsers();
             deletUserScreen.classList.add("infoScreenPopupHidden");
+            await fetchAllUsers();
             await showInfoScreen("User deleted successfully.", true);
         }
         else {
@@ -269,7 +282,7 @@ buttonDeleteUserScreenConfirm.addEventListener("click", async () => {
     if (response.ok) {
         confirmDeletionPasswordInput.classList.remove("mainInputStyleFalse");
         confirmDeletionPasswordInput.classList.add("mainInputStyleTrue");
-        await deleteUser(deleteUsername);
+        await deleteUser(deleteUsername);;
         deleteUsername = null;
         const deletUserScreen = document.getElementById("deleteUserScreen");
         deletUserScreen.classList.add("infoScreenPopupHidden");
