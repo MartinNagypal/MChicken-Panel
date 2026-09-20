@@ -128,11 +128,11 @@ async def createUser(user: models.createUserInput, request: Request, response: R
         if isPasswordValid.get("valid") == False:
             raise HTTPException(status_code=400, detail=error.passwordRequirementNotFulfilled)
         
-        roles = ["admin", "mod", "user"]
-        if user.role not in roles:
+        rolesList = await roles.getRolesList()
+        if user.role not in rolesList:
             raise HTTPException(status_code=400, detail=error.invalidRole)
         
-        result = await auth.register(user.username, user.password, user.role, False)
+        result = await auth.register(user.username, user.password, user.role, False, False)
         if result.get("message"):
             return {"message": result.get("message")}
         else:
@@ -227,14 +227,19 @@ async def updateUserRole(roleUpdate: models.roleUpdate, request: Request, respon
         raise HTTPException(status_code=403, detail=error.noPermission)
     
     if isValidSession == True:
-        roles = ["admin", "mod", "user"]
-        if roleUpdate.newRole not in roles:
+        rolesList = await roles.getRolesList()
+        if roleUpdate.newRole not in rolesList:
             raise HTTPException(status_code=400, detail=error.invalidRole)
         
         currentUsername = await auth.getUsernameBySession(currentSessionToken)
         currentUsername = currentUsername.get("username")
         if currentUsername == roleUpdate.username:
             raise HTTPException(status_code=403, detail="You cannot change your own role.")
+        
+        userRole = await auth.getUserRoleByUsername(roleUpdate.username)
+        userRole = userRole.get("role")
+        if userRole == role:
+            raise HTTPException(status_code=403, detail="You cannot change the role of a user with the same role as you.")
         
         validPassword = await auth.verifyPassword(currentUsername, roleUpdate.password)
         validPassword = validPassword.get("valid")

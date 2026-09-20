@@ -6,7 +6,7 @@ class AUTH:
         self.__encryption = encryption
         self.__sessionExpirationHours = sessionExpirationHours
 
-    async def register(self, username: str, password: str, role:str, isFirstUser: bool = False):
+    async def register(self, username: str, password: str, role:str, isFirstUser: bool = False, session: bool = True):
         await self.__db.execute("""
             CREATE TABLE IF NOT EXISTS systemUser(
                 userId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,9 +23,12 @@ class AUTH:
             return {"error": "1"}
         else:
             await self.__db.execute("INSERT INTO systemUser (username, password, role, isFirstUser) VALUES (?, ?, ?, ?)", (username, encryptedPassword, role, isFirstUser))
-            session = await self.createSession(username)
-            sessionToken = session.get("sessionToken")
-            return {"message": "User registered successfully.", "sessionToken": sessionToken, "sessionExpirationHours": self.__sessionExpirationHours}
+            if session:
+                session = await self.createSession(username)
+                sessionToken = session.get("sessionToken")
+                return {"message": "User registered successfully.", "sessionToken": sessionToken, "sessionExpirationHours": self.__sessionExpirationHours}
+            else:
+                return {"message": "User registered successfully."}
 
     async def createSession(self, username: str):
         sessionToken = self.__encryption.generateSessionToken()

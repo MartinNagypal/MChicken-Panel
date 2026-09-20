@@ -50,3 +50,6 @@ class ROLES:
         if permission not in self.__rolePermission[role]:
             return False
         return self.__rolePermission[role][permission]
+    
+    async def getRolesList(self):
+        return list(self.__rolePermission.keys())

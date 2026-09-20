@@ -142,7 +142,7 @@ socket.onmessage = (event) => {
     line.textContent = event.data;
     checkLineStatus(event.data, line);
     if(event.data.includes("RCON") || event.data.includes("Rcon") || event.data.includes("rcon")){
-        pass;
+        line.textContent = " ";
     }
     console.appendChild(line);
     console.scrollTop = console.scrollHeight;
