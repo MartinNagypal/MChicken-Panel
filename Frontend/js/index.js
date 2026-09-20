@@ -104,12 +104,13 @@ async function fetchServerStats() {
             document.getElementById('serverStatMemUsage').textContent = "N/A";
             document.getElementById('serverStatMaxMem').textContent = "N/A";
             document.getElementById('serverStatUptime').textContent = "N/A";
-            let buttons = [buttonStartStop, buttonRestart, buttonBackup];
+            /*let buttons = [buttonStartStop, buttonRestart, buttonBackup];
             buttons.forEach(button => {
                 button.style.color = "var(--text-color-secondary)";
                 button.style.borderColor = "var(--text-color-secondary)";
                 button.style.boxShadow = "none";
             })
+            */
             
         }
         else{

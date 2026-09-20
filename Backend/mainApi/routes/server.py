@@ -1,0 +1,321 @@
+from fastapi import FastAPI, APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Response, Cookie, Request
+import models.models as models
+import re
+from collections import deque
+from services.ssh import SSH
+from services.rcon import RCON
+
+router = APIRouter(tags=["Server"])
+
+connectedClients: set[WebSocket] = set()
+logBuffer = deque(maxlen=200)
+
+@router.get("/status")
+async def status(request: Request):
+    auth = request.app.state.auth
+    error = request.app.state.error
+    ssh = request.app.state.ssh
+    server = request.app.state.server
+    dockerContainerName = await server.getDockerContainerName()
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        if(ssh is None):
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        try:
+            result = await ssh.run(f'docker ps | grep {dockerContainerName}')
+            if 'healthy' in result.stdout:
+                return {"status": "healthy"}
+            elif 'starting' in result.stdout:
+                return {"status": "starting"}
+            elif 'unhealthy' in result.stdout:
+                return {"status": "unhealthy"}
+            else:
+                return {"status": "offline"}
+            
+        except Exception as e:
+            print(f"Error fetching server status: {str(e)}")
+            raise HTTPException(status_code=500, detail=error.serverStatusUnavailable)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
+
+@router.get("/stats")
+async def stats(request: Request):
+    auth = request.app.state.auth
+    error = request.app.state.error
+    ssh = request.app.state.ssh
+    rcon = request.app.state.rcon
+    server = request.app.state.server
+    dockerContainerName = await server.getDockerContainerName()
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        if(ssh is None):
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        try:
+            await rcon.updateRconPassword()
+            playerCount = await rcon.run("list")
+            playerCountRegex = re.search(r"There are (\d+) of a max of (\d+) players online:", playerCount)
+            if playerCountRegex:
+                currentPlayers = int(playerCountRegex.group(1))
+                maxPlayers = int(playerCountRegex.group(2))
+
+            cpuUsage = await ssh.run(f'docker stats {dockerContainerName} --no-stream --format "{{{{.CPUPerc}}}}"')
+            memUsage = await ssh.run(f'docker stats {dockerContainerName} --no-stream --format "{{{{.MemUsage}}}}"')
+            currentMemUsage = memUsage.stdout.strip().split("/")[0]
+            maxMem = memUsage.stdout.strip().split("/")[1]
+            
+            uptimeCmd = (
+                f"echo $(( ($(date +%s) - "
+                f"$(date -d \"$(docker inspect -f '{{{{.State.StartedAt}}}}' {dockerContainerName})\" +%s)) ))"
+            )
+            
+            uptimeResult = await ssh.run(uptimeCmd)
+            uptimeSeconds = int(uptimeResult.stdout.strip())
+            uptimeHours, uptimeRemainder = divmod(uptimeSeconds, 3600)
+            uptimeMinutes = uptimeRemainder // 60
+            uptime = f"{uptimeHours:02d}:{uptimeMinutes:02d}"
+            
+
+            return {
+                "currentPlayers": currentPlayers,
+                "maxPlayers": maxPlayers,
+                "cpuUsage": cpuUsage.stdout.strip(),
+                "currentMemUsage": currentMemUsage,
+                "maxMem": maxMem,
+                'uptime': uptime
+            }
+            
+        except Exception as e:
+            print(f"Error fetching server stats: {str(e)}")
+            raise HTTPException(status_code=500, detail=error.serverStatsUnavailable)
+        
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
+
+@router.post("/server/startstop")
+async def serverStartStop(request: Request):
+    auth = request.app.state.auth
+    error = request.app.state.error
+    ssh = request.app.state.ssh
+    server = request.app.state.server
+    dockerContainerName = await server.getDockerContainerName()
+    serverDirectory = await server.getServerDirectory()
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        if(ssh is None):
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
+        try:
+            status = await ssh.run(f'docker ps | grep {dockerContainerName}')
+            if 'healthy' in status.stdout:
+                await ssh.runInDir(serverDirectory, f'docker stop {dockerContainerName}')
+                return {"message": "Server stop command executed successfully."}
+            else:
+                await ssh.runInDir(serverDirectory, f'docker start {dockerContainerName}')
+                return {"message": "Server start command executed successfully."}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=error.serverStartStopFailed)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
+@router.post("/server/restart")
+async def serverRestart(request: Request):
+    auth = request.app.state.auth
+    error = request.app.state.error
+    ssh = request.app.state.ssh
+    server = request.app.state.server
+    dockerContainerName = await server.getDockerContainerName()
+    serverDirectory = await server.getServerDirectory()
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        if(ssh is None):
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
+        try:
+            await ssh.runInDir(serverDirectory, f'docker restart {dockerContainerName}')
+            return {"message": "Server restart command executed successfully."}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=error.serverRestartFailed)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
+@router.get("/server/data")
+async def serverData(request: Request):
+    auth = request.app.state.auth
+    error = request.app.state.error
+    ssh = request.app.state.ssh
+    server = request.app.state.server
+    serverDirectory = await server.getServerDirectory()
+    dockerComposeFile = await server.getDockerComposeFile()
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        if(ssh is None):
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        try:
+            serverNameResult = await ssh.runInDir(serverDirectory, f'cat {dockerComposeFile} | grep container_name')
+            serverNameMatch = re.search(r"container_name:\s*([a-zA-Z0-9_-]+)", serverNameResult.stdout)
+            serverName = serverNameMatch.group(1) if serverNameMatch else "Unknown"
+            
+            serverVersionResult = await ssh.runInDir(serverDirectory, f'cat {dockerComposeFile} | grep VERSION')
+            serverVersionMatch = re.search(r'VERSION:\s*"([^"]+)"', serverVersionResult.stdout)
+            serverVersion = serverVersionMatch.group(1) if serverVersionMatch else "Unknown"
+            
+            return {
+                "serverName": serverName,
+                "serverVersion": serverVersion,
+                "ip": await ssh.getIp()
+            }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=error.serverDataUnavailable)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
+
+@router.post("/server/sendCommand")
+async def sendCommand(command:models.commandInput, request: Request):
+    auth = request.app.state.auth
+    error = request.app.state.error
+    ssh = request.app.state.ssh
+    rcon = request.app.state.rcon
+    watcher = request.app.state.logWatcher
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        if(ssh is None):
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+
+        try:
+            await rcon.updateRconPassword()
+            response = await rcon.run(command.command)
+            watcher.buffer.append(response)
+            return {"response": response}
+        
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=error.serverCommandFailed)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+
+
+@router.websocket("/server/logs")
+async def server_logs(websocket: WebSocket):
+    auth = websocket.app.state.auth
+    watcher = websocket.app.state.logWatcher
+    ssh = websocket.app.state.ssh
+
+    token = websocket.cookies.get("sessionToken")
+    is_valid = await auth.verifySession(token)
+
+    if not is_valid.get("valid"):
+        await websocket.accept()
+        await websocket.send_text("Invalid session token")
+        await websocket.close()
+        return
+
+    await websocket.accept()
+
+    if ssh is None:
+        await websocket.send_text("SSH not configured")
+        return
+
+    for line in watcher.buffer:
+        await websocket.send_text(line)
+
+    watcher.clients.add(websocket)
+
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        watcher.clients.discard(websocket)
+
+
+@router.post("/server/sshConfig")
+async def sshConfig(sshConfig: models.sshConfig, request: Request):
+    auth = request.app.state.auth
+    sql = request.app.state.sql
+    encryption = request.app.state.encryption
+    error = request.app.state.error
+    server = request.app.state.server
+    watcher = request.app.state.logWatcher
+    
+    rconPort = await server.getRconPort()
+    serverFilesDirectory = await server.getServerFilesDirectory()
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    if isValidSession == True:
+        
+        role = await auth.getUserRole(currentSessionToken)
+        role = role.get("role")
+        if role != "admin":
+            raise HTTPException(status_code=403, detail=error.noPermission)
+        
+        try:
+            testSSH = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
+            try:
+                await testSSH.connect()
+                await testSSH.close()
+                result = await sql.fetchone("SELECT * FROM server WHERE ip = ? AND port = ?", (sshConfig.ip, sshConfig.port))
+                if result:
+                    await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, encryption.encryptSecret(sshConfig.password), sshConfig.ip, sshConfig.port))
+                    return {"detail": "SSH configuration updated successfully."}
+                else:
+                    try:
+                        await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, encryption.encryptSecret(sshConfig.password)))
+                        global ssh, rcon
+                        ssh = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
+                        await ssh.connect()
+                        rcon = await RCON.create(sshConfig.ip, rconPort, ssh, serverFilesDirectory)
+                        request.app.state.ssh = ssh
+                        request.app.state.rcon = rcon
+                        await watcher.restart(request.app)
+                        return {"detail": "SSH configuration saved and connected successfully."}
+                    except Exception as e:
+                        print(f"Error saving SSH configuration: {str(e)}")
+                        raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
+                        
+            except Exception as e:
+                print(f"Error connecting to SSH server: {str(e)}")
+                raise HTTPException(status_code=400, detail=error.sshConnectFailed)
+            
+        except Exception as e:
+            print(f"Error during SSH configuration: {str(e)}")
+            raise HTTPException(status_code=500, detail=error.sshConfigFailed)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+    
+
