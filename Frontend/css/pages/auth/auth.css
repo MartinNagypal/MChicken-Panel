@@ -23,6 +23,12 @@
     transition: all 0.3s ease;
 }
 
+@media (max-width: 600px){
+    .authContainer{
+        border: none;
+    }
+}
+
 .authContainerGreen{
     border-color: var(--accent-primary);
 }

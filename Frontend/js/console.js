@@ -126,6 +126,7 @@ async function sendConsoleInput() {
         inputField.value = '';
     }
     else{
+        document.getElementById('consoleInputField').value = '';
         await showInfoScreen(result.detail, false);
     }
 }

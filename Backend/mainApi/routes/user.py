@@ -1,24 +1,27 @@
 from fastapi import FastAPI, APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Response, Cookie, Request
 import models.models as models
-
+from services.roles import ROLES
 
 router = APIRouter(tags=["User"])
+roles = ROLES()
 
 @router.get("/users")
-async def getUsers(request: Request):
+async def getUsers(request: Request): #perm: viewUsers
     auth = request.app.state.auth
     error = request.app.state.error
     
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "viewUsers")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
-        role = await auth.getUserRole(currentSessionToken)
-        role = role.get("role")
-        allowedRoles = ["admin", "mod"]
-        if role not in allowedRoles:
-            raise HTTPException(status_code=403, detail=error.noPermission)
-        
         users = await auth.getAllUsers()
         return {"users": users}
     else:
@@ -96,13 +99,21 @@ async def sessionCount(request: Request, response: Response):
 
 
 @router.post("/users/user/create")
-async def createUser(user: models.createUserInput, request: Request, response: Response):
+async def createUser(user: models.createUserInput, request: Request, response: Response): #perm: manageUsers
     auth = request.app.state.auth
     error = request.app.state.error
     
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "manageUsers")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         role = await auth.getUserRole(currentSessionToken)
         role = role.get("role")
@@ -154,13 +165,21 @@ async def verifyPassword(password: models.password, request: Request, response: 
 
 
 @router.post("/user/delete")
-async def deleteUser(username: models.deleteUserInput, request: Request, response: Response):
+async def deleteUser(username: models.deleteUserInput, request: Request, response: Response): #perm: manageUsers
     auth = request.app.state.auth
     error = request.app.state.error
     
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "manageUsers")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         currentUsername = await auth.getUsernameBySession(currentSessionToken)
         currentUsername = currentUsername.get("username")
@@ -178,10 +197,6 @@ async def deleteUser(username: models.deleteUserInput, request: Request, respons
         
         if currentUsername == username.username:
             raise HTTPException(status_code=403, detail="You cannot delete your own account.")
-        role = await auth.getUserRole(currentSessionToken)
-        role = role.get("role")
-        if role != "admin":
-            raise HTTPException(status_code=403, detail=error.noPermission)
         
         validPassword = await auth.verifyPassword(currentUsername, username.password)
         validPassword = validPassword.get("valid")
@@ -196,13 +211,21 @@ async def deleteUser(username: models.deleteUserInput, request: Request, respons
 
 
 @router.post("/user/role/update")
-async def updateUserRole(roleUpdate: models.roleUpdate, request: Request, response: Response):
+async def updateUserRole(roleUpdate: models.roleUpdate, request: Request, response: Response): #perm: manageUsers
     auth = request.app.state.auth
     error = request.app.state.error
     
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "manageUsers")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         roles = ["admin", "mod", "user"]
         if roleUpdate.newRole not in roles:
@@ -212,11 +235,6 @@ async def updateUserRole(roleUpdate: models.roleUpdate, request: Request, respon
         currentUsername = currentUsername.get("username")
         if currentUsername == roleUpdate.username:
             raise HTTPException(status_code=403, detail="You cannot change your own role.")
-        
-        role = await auth.getUserRole(currentSessionToken)
-        role = role.get("role")
-        if role != "admin":
-            raise HTTPException(status_code=403, detail=error.noPermission)
         
         validPassword = await auth.verifyPassword(currentUsername, roleUpdate.password)
         validPassword = validPassword.get("valid")

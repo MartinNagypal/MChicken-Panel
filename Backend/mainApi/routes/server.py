@@ -4,14 +4,16 @@ import re
 from collections import deque
 from services.ssh import SSH
 from services.rcon import RCON
+from services.roles import ROLES
 
 router = APIRouter(tags=["Server"])
+roles = ROLES()
 
 connectedClients: set[WebSocket] = set()
 logBuffer = deque(maxlen=200)
 
 @router.get("/status")
-async def status(request: Request):
+async def status(request: Request): #perm: serverViewStats
     auth = request.app.state.auth
     error = request.app.state.error
     ssh = request.app.state.ssh
@@ -21,9 +23,20 @@ async def status(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    username = await auth.getUsernameBySession(currentSessionToken)
+    username = username.get("username")
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "serverViewStats")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+                
         try:
             result = await ssh.run(f'docker ps | grep {dockerContainerName}')
             if 'healthy' in result.stdout:
@@ -43,7 +56,7 @@ async def status(request: Request):
 
 
 @router.get("/stats")
-async def stats(request: Request):
+async def stats(request: Request): #perm: serverViewStats
     auth = request.app.state.auth
     error = request.app.state.error
     ssh = request.app.state.ssh
@@ -54,6 +67,16 @@ async def stats(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    username = await auth.getUsernameBySession(currentSessionToken)
+    username = username.get("username")
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "serverViewStats")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
@@ -100,7 +123,7 @@ async def stats(request: Request):
 
 
 @router.post("/server/startstop")
-async def serverStartStop(request: Request):
+async def serverStartStop(request: Request): #perm: serverStartStop
     auth = request.app.state.auth
     error = request.app.state.error
     ssh = request.app.state.ssh
@@ -111,15 +134,18 @@ async def serverStartStop(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "serverStartStop")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
-        
-        role = await auth.getUserRole(currentSessionToken)
-        role = role.get("role")
-        if role != "admin":
-            raise HTTPException(status_code=403, detail=error.noPermission)
-        
+                
         try:
             status = await ssh.run(f'docker ps | grep {dockerContainerName}')
             if 'healthy' in status.stdout:
@@ -133,8 +159,9 @@ async def serverStartStop(request: Request):
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
 
+
 @router.post("/server/restart")
-async def serverRestart(request: Request):
+async def serverRestart(request: Request): #perm: serverStartStop
     auth = request.app.state.auth
     error = request.app.state.error
     ssh = request.app.state.ssh
@@ -145,14 +172,19 @@ async def serverRestart(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    username = await auth.getUsernameBySession(currentSessionToken)
+    username = username.get("username")
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "serverStartStop")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
-        
-        role = await auth.getUserRole(currentSessionToken)
-        role = role.get("role")
-        if role != "admin":
-            raise HTTPException(status_code=403, detail=error.noPermission)
         
         try:
             await ssh.runInDir(serverDirectory, f'docker restart {dockerContainerName}')
@@ -162,8 +194,9 @@ async def serverRestart(request: Request):
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
 
+
 @router.get("/server/data")
-async def serverData(request: Request):
+async def serverData(request: Request): #perm: serverViewStats
     auth = request.app.state.auth
     error = request.app.state.error
     ssh = request.app.state.ssh
@@ -174,6 +207,14 @@ async def serverData(request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "serverViewStats")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
@@ -198,7 +239,7 @@ async def serverData(request: Request):
 
 
 @router.post("/server/sendCommand")
-async def sendCommand(command:models.commandInput, request: Request):
+async def sendCommand(command:models.commandInput, request: Request): #perm: sendCommand
     auth = request.app.state.auth
     error = request.app.state.error
     ssh = request.app.state.ssh
@@ -208,6 +249,14 @@ async def sendCommand(command:models.commandInput, request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "sendCommand")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
         if(ssh is None):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
@@ -230,13 +279,24 @@ async def sendCommand(command:models.commandInput, request: Request):
 
 
 @router.websocket("/server/logs")
-async def server_logs(websocket: WebSocket):
+async def server_logs(websocket: WebSocket): #perm: viewConsole
     auth = websocket.app.state.auth
     watcher = websocket.app.state.logWatcher
     ssh = websocket.app.state.ssh
+    error = websocket.app.state.error
 
     token = websocket.cookies.get("sessionToken")
     is_valid = await auth.verifySession(token)
+    
+    role = await auth.getUserRole(token)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "viewConsole")
+    
+    if not permission:
+        await websocket.accept()
+        await websocket.send_text("You do not have permission to view the console.")
+        await websocket.close()
+        return
 
     if not is_valid.get("valid"):
         await websocket.accept()
@@ -263,7 +323,7 @@ async def server_logs(websocket: WebSocket):
 
 
 @router.post("/server/sshConfig")
-async def sshConfig(sshConfig: models.sshConfig, request: Request):
+async def sshConfig(sshConfig: models.sshConfig, request: Request): #perm: setupSSH
     auth = request.app.state.auth
     sql = request.app.state.sql
     encryption = request.app.state.encryption
@@ -277,13 +337,15 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request):
     currentSessionToken = request.cookies.get("sessionToken")
     isValidSession = await auth.verifySession(currentSessionToken)
     isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "setupSSH")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
     if isValidSession == True:
-        
-        role = await auth.getUserRole(currentSessionToken)
-        role = role.get("role")
-        if role != "admin":
-            raise HTTPException(status_code=403, detail=error.noPermission)
-        
         try:
             testSSH = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
             try:
