@@ -6,6 +6,7 @@ from collections import deque
 from services.ssh import SSH
 from services.rcon import RCON
 from services.roles import ROLES
+from services.server import SERVER
 
 router = APIRouter(tags=["Server"])
 roles = ROLES()
@@ -437,7 +438,7 @@ async def sshReconnect(request:Request):
         result = await sql.fetchone("SELECT * FROM server WHERE ip = ?", (ip,))
         if result:
             try:
-                newSSH = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
+                newSSH = SSH(result[1], result[2], result[3], result[4])
                 await asyncio.wait_for(newSSH.connect(), timeout=1)
                 request.app.state.ssh = newSSH
                 newRcon = await RCON.create(ip, rconPort, newSSH, serverFilesDirectory)
@@ -454,3 +455,50 @@ async def sshReconnect(request:Request):
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
+    
+@router.post("/server/configure")
+async def configureServer(serverData: models.configureServer, request: Request):
+    auth = request.app.state.auth
+    sql = request.app.state.sql
+    encryption = request.app.state.encryption
+    error = request.app.state.error
+    watcher = request.app.state.logWatcher
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "sendCommand")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
+    if isValidSession == True:
+
+        result = await sql.fetchone("SELECT * FROM server WHERE ip = ?", (serverData.sshIp,))
+        if result:
+            raise HTTPException(status_code=401, detail=error.configurationAlreadyExists)
+
+        testSSH = SSH(serverData.sshIp, serverData.sshPort, serverData.sshUsername, serverData.sshPassword)
+        try:
+            await asyncio.wait_for(testSSH.connect(), timeout=2)
+            if not await testSSH.checkConnection():
+                raise HTTPException(status_code=500, detail=error.sshNotReachable)
+            
+            if serverData.dirToBackups == "none":
+                dirToBackups = None
+            else:
+                dirToBackups = serverData.dirToBackups
+            
+            server = SERVER(serverData.containerName, serverData.dirToDC_File, serverData.dirToServerData, request.app.state.compose, serverData.sshIp, serverData.rconPort, request.app.state.rconPassword, request.app.state.allowRegistration)
+            request.app.state.server = server
+            request.app.state.ssh = testSSH
+            rcon = await RCON.create(serverData.sshIp, serverData.rconPort, testSSH, serverData.dirToServerData)
+            request.app.state.rcon = rcon
+            await sql.execute("INSERT INTO server (ip, port, username, password, rconPort, containerName, dirToServerData, dirToDC_File, dirToBackups) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (serverData.sshIp, serverData.sshPort, serverData.sshUsername, serverData.sshPassword, serverData.rconPort, serverData.containerName, serverData.dirToServerData, serverData.dirToDC_File, dirToBackups))
+            await watcher.restart(request.app)
+            
+        except(asyncio.TimeoutError, TimeoutError):
+            raise HTTPException(status_code=500, detail=error.sshNotReachable)

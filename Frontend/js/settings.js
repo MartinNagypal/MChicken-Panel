@@ -89,16 +89,20 @@ buttonServerSetupTabConfigureServer.addEventListener("click", async () => {
 async function configureServer(){
     const attributes = []
     attributes.push(document.getElementById("sshIp")); //0
-    attributes.push(document.getElementById("sshPort")); //1
+    attributes.push(document.getElementById("sshPort")); //1 optional
     attributes.push(document.getElementById("sshUsername")); //2
     attributes.push(document.getElementById("sshPassword")); //3
-    attributes.push(document.getElementById("rconPort")); //4
+    attributes.push(document.getElementById("rconPort")); //4 optional
     attributes.push(document.getElementById("containerName")); //5
     attributes.push(document.getElementById("dirToServerData")); //6
     attributes.push(document.getElementById("dirToDC_File")); //7
-    attributes.push(document.getElementById("dirToBackups")); //8
+    attributes.push(document.getElementById("dirToBackups")); //8 optional
 
-    for(let i = 0; i <= attributes.length; i++){
+    let sshPort = attributes[1].value;
+    let rconPort = attributes[4].value;
+    let dirToBackups = attributes[8].value;
+
+    for(let i = 0; i < attributes.length; i++){
         if(!attributes[i].value && i!==1 && i!==4 && i!==8){
             attributes[i].classList.add("mainInputStyleFalse");
         }
@@ -106,6 +110,44 @@ async function configureServer(){
             attributes[i].classList.remove("mainInputStyleFalse");
             attributes[i].classList.add("mainInputStyleTrue");
         }
+    }
+
+    if(!attributes[1].value){
+        sshPort = 22;
+    }
+
+    if(!attributes[4].value){
+        rconPort = 25575;
+    }
+
+    if(!attributes[8].value){
+        dirToBackups = "none";
+    }
+
+    response = await fetch('http://127.0.0.1:8000/server/configure', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            sshIp: attributes[0].value,
+            sshPort: sshPort,
+            sshUsername: attributes[2].value,
+            sshPassword: attributes[3].value, 
+            rconPort: rconPort,
+            containerName: attributes[5].value,
+            dirToServerData: attributes[6].value,
+            dirToDC_File: attributes[7].value,
+            dirToBackups: dirToBackups
+        })
+    });
+    data = await response.json();
+    if(!response.ok){
+        await showInfoScreen(data.detail, false);
+    }
+    else{
+        await showInfoScreen("Server succesfully configured.", true)
     }
 }
 

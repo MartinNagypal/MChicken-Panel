@@ -65,7 +65,7 @@ class SSH:
         if self.__connection is None:
             return False
         
-        if self.__connection.is_closed():
+        if self.__connection.connection_lost():
             return False
         
         return True

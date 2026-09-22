@@ -31,8 +31,6 @@ serverDirectory = "/mnt/serverData/mcDomiCreate/"
 serverFilesDirectory = "/mnt/serverData/mcDomiCreate/data/"
 dockerComposeFile = "docker-compose.yaml"
 
-server = SERVER(dockerContainerName, serverDirectory, serverFilesDirectory, dockerComposeFile, ip, rconPort, rconPassword, allowRegistration)
-
 sql = SQLITE()
 encryptionKey = os.getenv("ENCRYPTION_KEY").encode()
 if not encryptionKey:
@@ -61,17 +59,24 @@ async def lifespan(app: FastAPI):
             ip TEXT NOT NULL,
             port INTEGER NOT NULL,
             username TEXT NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            rconPort INTEGER NOT NULL,
+            containerName TEXT NOT NULL,
+            dirToServerData TEXT NOT NULL,
+            dirToDC_File TEXT NOT NULL,
+            dirToBackups TEXT
         )
     """)
     
     result = await sql.fetchone("SELECT * FROM server")
     if result:
+        server = SERVER(result[6], result[8], result[7], app.state.compose, result[1], result[5], app.state.rconPassword, app.state.allowRegistration)
+        app.state.server = server
         try:
             ssh = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
             await asyncio.wait_for(ssh.connect(), timeout=3)
             app.state.ssh = ssh
-            rcon = await RCON.create(result[1], rconPort, ssh, serverFilesDirectory)
+            rcon = await RCON.create(result[1], result[5], ssh, result[7])
             app.state.rcon = rcon
             
         except (asyncio.TimeoutError, TimeoutError):
@@ -105,8 +110,13 @@ app.state.ssh = ssh
 app.state.rcon = rcon
 app.state.secureCookie = secureCookie
 app.state.allowRegistration = allowRegistration
-app.state.server = server
 app.state.logWatcher = logWatcher
+app.state.rconPassword = rconPassword
+app.state.compose = "docker-compose.yaml"
+app.state.server = None
+app.state.ssh = None
+app.state.rcon = None
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

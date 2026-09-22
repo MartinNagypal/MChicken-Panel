@@ -11,6 +11,7 @@ class errorMessage:
         self.noActiveSession = "No active session found. Please log in."
         self.invalidSession = "Session is invalid or expired."
         self.sshConnectExists = "SSH is already connected."
+        self.configurationAlreadyExists = "This configuration already exists"
         self.sshNotConfigured = "SSH is not configured"
         self.sshNotReachable = "SSH is not reachable."
         self.sshConnectionFailed = "SSH connection failed."

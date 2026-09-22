@@ -32,3 +32,14 @@ class createUserInput(BaseModel):
     username: str
     password: str
     role: str
+    
+class configureServer(BaseModel):
+    sshIp: str
+    sshPort: int
+    sshUsername: str
+    sshPassword: str
+    rconPort: int
+    containerName: str
+    dirToServerData: str
+    dirToDC_File: str
+    dirToBackups: str
