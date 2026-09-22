@@ -39,6 +39,7 @@
     display:flex;
     flex-direction: row;
     gap: 10pt;
+    overflow-x: auto;
 
 }
 
@@ -226,6 +227,22 @@
     flex-direction: row;
     gap: 7.5pt;
     align-items: center;
+}
+
+.addServerContainer{
+    display: flex;
+    flex-direction: row;
+    gap: 15pt;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.serverAttributes{
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5pt;
 }
 
 

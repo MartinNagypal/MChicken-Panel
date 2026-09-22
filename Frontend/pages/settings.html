@@ -92,28 +92,35 @@
                 <div class="settingsTabTitle">Server Setup <hr class="hrSplitter" style="width: 100% !important;"></div>
                 <div class="serverSetupTabs">
                     <div class="serverSetupTab">
-                        <span class="serverSetupTabTitle">SSH Setup</span>
+                        <span class="serverSetupTabTitle">Configure Server</span>
                         <hr class="hrSplitter" style="width: 100% !important;">
-                        <span class="serverSetupTabSubtitle">SSH IP / PORT</span>
-                        <div id="sshIpPort">
-                            <input id="sshIp" placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
-                            <input id="sshPort" placeholder="22" class="mainInputStyle" style="width: 50pt;">
+                        <div class="addServerContainer">
+                            <div class="serverAttributes">
+                                <span class="serverSetupTabSubtitle">SSH IP / PORT</span>
+                                <div id="sshIpPort">
+                                    <input id="sshIp" placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
+                                    <input id="sshPort" placeholder="22" class="mainInputStyle" style="width: 50pt;">
+                                </div>
+                                <span class="serverSetupTabSubtitle">Username</span>
+                                <input id="sshUsername" placeholder="root" class="mainInputStyle">
+                                <span class="serverSetupTabSubtitle">Password</span>
+                                <input id="sshPassword" type="password" placeholder="password" class="mainInputStyle">
+                                <span class="serverSetupTabSubtitle">RCON Port</span>
+                                <input id="rconPort" placeholder="25575 (optional)" class="mainInputStyle">
+                            </div>
+                            <div class="serverAttributes">
+                                <span class="serverSetupTabSubtitle">Container Name</span>
+                                <input id="containerName" placeholder="name" class="mainInputStyle">
+                                <span class="serverSetupTabSubtitle">Server Data Directory</span>
+                                <input id="dirToServerData" placeholder="/server/data/dir" class="mainInputStyle">
+                                <span class="serverSetupTabSubtitle">docker-compose File Directory</span>
+                                <input id="dirToDC_File" placeholder="/path/docker-compose.yml" class="mainInputStyle">
+                                <span class="serverSetupTabSubtitle">Backup Directory</span>
+                                <input id="dirToBackups" placeholder="/path/to/backups (optional)" class="mainInputStyle">
+                            </div>
                         </div>
-                        <span class="serverSetupTabSubtitle">Username</span>
-                        <input id="sshUsername" placeholder="root" class="mainInputStyle">
-                        <span class="serverSetupTabSubtitle">Password</span>
-                        <input id="sshPassword" placeholder="password" type="password" class="mainInputStyle">
-                        <span class="serverSetupSubmit" id="serverSetupTabSSHSubmit">Submit</span>
-                    </div>
-                    <div class="serverSetupTab">
-                        <span class="serverSetupTabTitle">RCON Setup</span>
                         <hr class="hrSplitter" style="width: 100% !important;">
-                        <span class="serverSetupTabSubtitle">RCON IP / PORT</span>
-                        <div id="rconIpPort">
-                            <input placeholder="x.x.x.x" class="mainInputStyle" style="width: 100pt;"> 
-                            <input placeholder="25575" class="mainInputStyle" style="width: 50pt;">
-                        </div>
-                        <span class="serverSetupSubmit" id="serverSetupTabRCONSubmit">Submit</span>
+                        <span class="serverSetupSubmit" id="serverSetupTabSSHSubmit">Add Server</span>
                     </div>
                     <div class="serverSetupTab">
                         <span class="serverSetupTabTitle">Account</span>
@@ -122,6 +129,8 @@
                         <span class="accountSpan"> martin04lel </span>
                         <span class="serverSetupTabSubtitle">ROLE</span>
                         <span class="accountSpan"> admin </span>
+                        <span class="serverSetupTabSubtitle">SESSION</span>
+                        <span class="accountSpan"> 2 </span>
                         <span class="serverSetupDanger" id="buttonLogoutAllSessions">Logout all Sessions</span>
                     </div>
                 </div>
