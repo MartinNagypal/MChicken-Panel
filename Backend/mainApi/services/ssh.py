@@ -19,7 +19,7 @@ class SSH:
             return await self.__connection.run(command)
         except (asyncssh.Error, OSError, ConnectionError):
             self.__connection = None
-            await self.connect()
+            await asyncio.wait_for(self.connect(), timeout=1)
             return await self.__connection.run(command)
     
     async def runInDir(self, dir:str, command:str):
@@ -29,7 +29,7 @@ class SSH:
             return await self.__connection.run(f'cd {dir} && {command}')
         except (asyncssh.Error, OSError, ConnectionError):
             self.__connection = None
-            await self.connect()
+            await asyncio.wait_for(self.connect(), timeout=1)
             return await self.__connection.run(f'cd {dir} && {command}')
     
     async def stream(self, command: str):
@@ -42,7 +42,7 @@ class SSH:
         
         except (asyncssh.Error, OSError, ConnectionError):
             self.__connection = None
-            await self.connect()
+            await asyncio.wait_for(self.connect(), timeout=1)
             
             process = await self.__connection.create_process(command)
             async for line in process.stdout:
@@ -63,9 +63,6 @@ class SSH:
             
     async def checkConnection(self):
         if self.__connection is None:
-            return False
-        
-        if self.__connection.connection_lost():
             return False
         
         if self.__connection.is_closed():

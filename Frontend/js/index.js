@@ -51,6 +51,7 @@ async function fetchServerStatus() {
             document.getElementById('serverStatus').textContent = 'Error';
             document.getElementById('serverStatus').style.color = 'var(--status-danger)';
             document.getElementById('serverStatusIcon').style.color = 'var(--status-danger)';
+            await sshReconnect();
         }
     }
     catch (error) {
@@ -58,6 +59,7 @@ async function fetchServerStatus() {
         document.getElementById('serverStatus').textContent = 'Error';
         document.getElementById('serverStatus').style.color = 'var(--status-danger)';
         document.getElementById('serverStatusIcon').style.color = 'var(--status-danger)';
+        await sshReconnect();
     }
 }
 
@@ -128,6 +130,12 @@ async function fetchServerStats() {
     }
 }
 
+async function sshReconnect(){
+    const response = await fetch('http://127.0.0.1:8000/server/sshReconnect', {
+        method: 'GET',
+        credentials: 'include'
+    });
+}
 
 buttonRestart.addEventListener('click', async() => {
     try {
@@ -192,11 +200,11 @@ async function refreshDashboard(){
     refreshRunning = true;
 
     try{
-        Promise.allSettled([fetchServerData(), fetchServerStatus(), fetchServerStats()]);
+        await Promise.allSettled([fetchServerData(), fetchServerStatus(), fetchServerStats()]);
     } finally {
         refreshRunning = false;
     }
 }
 
-refreshDashboard
+refreshDashboard();
 const refreshIntervall = setInterval(refreshDashboard, 5000);

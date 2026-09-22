@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Response, Cookie, Request
 import models.models as models
 import re
+import asyncio
 from collections import deque
 from services.ssh import SSH
 from services.rcon import RCON
@@ -328,19 +329,14 @@ async def server_logs(websocket: WebSocket): #perm: viewConsole
         return
 
     await websocket.accept()
-
-    if ssh is None:
-        await websocket.send_text("SSH not configured")
-        return
     
     if not ssh:
         await websocket.send_text(error.sshNotConfigured)
-        return
         
-    if not await ssh.checkConnection():
-        if not await ssh.reconnect():
-            await websocket.send_text(error.sshNotReachable)
-            return
+    if ssh: 
+        if not await ssh.checkConnection():
+            if not await ssh.reconnect():
+                await websocket.send_text(error.sshNotReachable)
 
     for line in watcher.buffer:
         await websocket.send_text(line)
@@ -384,11 +380,11 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request): #perm: setup
                 await testSSH.connect()
                 result = await sql.fetchone("SELECT * FROM server WHERE ip = ? AND port = ?", (sshConfig.ip, sshConfig.port))
                 if result:
-                    await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, encryption.encryptSecret(sshConfig.password), sshConfig.ip, sshConfig.port))
                     request.app.state.ssh = testSSH
                     newRcon = await RCON.create(sshConfig.ip, rconPort, testSSH, serverFilesDirectory)
                     request.app.state.rcon = newRcon
                     await watcher.restart(request.app)
+                    await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, encryption.encryptSecret(sshConfig.password), sshConfig.ip, sshConfig.port))
                     return {"detail": "SSH configuration updated successfully."}
                 else:
                     try:
@@ -415,3 +411,46 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request): #perm: setup
         raise HTTPException(status_code=401, detail=error.invalidSession)
     
 
+@router.get("/server/sshReconnect")
+async def sshReconnect(request:Request):
+    auth = request.app.state.auth
+    ssh = request.app.state.ssh
+    sql = request.app.state.sql
+    encryption = request.app.state.encryption
+    error = request.app.state.error
+    server = request.app.state.server
+    watcher = request.app.state.logWatcher
+    
+    rconPort = await server.getRconPort()
+    serverFilesDirectory = await server.getServerFilesDirectory()
+    ip = await server.getIp()
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    
+    if isValidSession == True:
+        if ssh is not None:
+            if await ssh.checkConnection():
+                raise HTTPException(status_code=409, detail=error.sshConnectExists)
+            
+        result = await sql.fetchone("SELECT * FROM server WHERE ip = ?", (ip,))
+        if result:
+            try:
+                newSSH = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
+                await asyncio.wait_for(newSSH.connect(), timeout=1)
+                request.app.state.ssh = newSSH
+                newRcon = await RCON.create(ip, rconPort, newSSH, serverFilesDirectory)
+                request.app.state.rcon = newRcon
+                await watcher.restart(request.app)
+                
+            except(asyncio.TimeoutError, TimeoutError):
+                raise HTTPException(status_code=500, detail=error.sshNotReachable)
+            
+            except Exception as e:
+                print(f'Error establishing new SSH connection: {e}')
+                raise HTTPException(status_code=500, detail=error.sshConnectionFailed)
+        else:
+            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)

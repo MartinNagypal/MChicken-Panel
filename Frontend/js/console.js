@@ -2,6 +2,10 @@ const consoleExpandButton = document.getElementById("consoleExpandButton");
 const terminal = document.getElementById('consoleTerminalOutput');
 const consoleInputSendButton = document.getElementById('consoleInputSendButton');
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const errorWords = [
     "Error",
     "ERROR",
@@ -131,7 +135,8 @@ async function sendConsoleInput() {
     }
 }
 
-const socket = new WebSocket('ws://127.0.0.1:8000/server/logs');
+let socket = new WebSocket('ws://127.0.0.1:8000/server/logs');
+
 socket.onopen = () => {
     console.log('WebSocket connection established');
 }
