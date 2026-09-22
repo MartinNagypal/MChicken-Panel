@@ -34,8 +34,12 @@ async def status(request: Request): #perm: serverViewStats
         raise HTTPException(status_code=403, detail=error.noPermission)
     
     if isValidSession == True:
-        if(ssh is None):
+        if not ssh:
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+            
+        if not await ssh.checkConnection():
+            if not await ssh.reconnect():
+                raise HTTPException(status_code=500, detail=error.sshNotConfigured)
                 
         try:
             result = await ssh.run(f'docker ps | grep {dockerContainerName}')
@@ -78,8 +82,13 @@ async def stats(request: Request): #perm: serverViewStats
         raise HTTPException(status_code=403, detail=error.noPermission)
     
     if isValidSession == True:
-        if(ssh is None):
+        if not ssh:
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+            
+        if not await ssh.checkConnection():
+            if not await ssh.reconnect():
+                raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+            
         try:
             await rcon.updateRconPassword()
             playerCount = await rcon.run("list")
@@ -143,8 +152,12 @@ async def serverStartStop(request: Request): #perm: serverStartStop
         raise HTTPException(status_code=403, detail=error.noPermission)
     
     if isValidSession == True:
-        if(ssh is None):
+        if not ssh:
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+            
+        if not await ssh.checkConnection():
+            if not await ssh.reconnect():
+                raise HTTPException(status_code=500, detail=error.sshNotConfigured)
                 
         try:
             status = await ssh.run(f'docker ps | grep {dockerContainerName}')
@@ -183,8 +196,12 @@ async def serverRestart(request: Request): #perm: serverStartStop
         raise HTTPException(status_code=403, detail=error.noPermission)
     
     if isValidSession == True:
-        if(ssh is None):
+        if not ssh:
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+            
+        if not await ssh.checkConnection():
+            if not await ssh.reconnect():
+                raise HTTPException(status_code=500, detail=error.sshNotConfigured)
         
         try:
             await ssh.runInDir(serverDirectory, f'docker restart {dockerContainerName}')
@@ -216,8 +233,12 @@ async def serverData(request: Request): #perm: serverViewStats
         raise HTTPException(status_code=403, detail=error.noPermission)
     
     if isValidSession == True:
-        if(ssh is None):
+        if not ssh:
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+            
+        if not await ssh.checkConnection():
+            if not await ssh.reconnect():
+                raise HTTPException(status_code=500, detail=error.sshNotReachable)
         try:
             serverNameResult = await ssh.runInDir(serverDirectory, f'cat {dockerComposeFile} | grep container_name')
             serverNameMatch = re.search(r"container_name:\s*([a-zA-Z0-9_-]+)", serverNameResult.stdout)
@@ -258,13 +279,15 @@ async def sendCommand(command:models.commandInput, request: Request): #perm: sen
         raise HTTPException(status_code=403, detail=error.noPermission)
     
     if isValidSession == True:
-        if(ssh is None):
+        if not ssh:
             raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+            
+        if not await ssh.checkConnection():
+            if not await ssh.reconnect():
+                raise HTTPException(status_code=500, detail=error.sshNotReachable)
         
-        role = await auth.getUserRole(currentSessionToken)
-        role = role.get("role")
-        if role != "admin":
-            raise HTTPException(status_code=403, detail=error.noPermission)
+        if(rcon is None):
+            raise HTTPException(status_code=500, detail=error.rconError)
 
         try:
             await rcon.updateRconPassword()
@@ -309,6 +332,15 @@ async def server_logs(websocket: WebSocket): #perm: viewConsole
     if ssh is None:
         await websocket.send_text("SSH not configured")
         return
+    
+    if not ssh:
+        await websocket.send_text(error.sshNotConfigured)
+        return
+        
+    if not await ssh.checkConnection():
+        if not await ssh.reconnect():
+            await websocket.send_text(error.sshNotReachable)
+            return
 
     for line in watcher.buffer:
         await websocket.send_text(line)
@@ -350,19 +382,21 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request): #perm: setup
             testSSH = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
             try:
                 await testSSH.connect()
-                await testSSH.close()
                 result = await sql.fetchone("SELECT * FROM server WHERE ip = ? AND port = ?", (sshConfig.ip, sshConfig.port))
                 if result:
                     await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, encryption.encryptSecret(sshConfig.password), sshConfig.ip, sshConfig.port))
+                    request.app.state.ssh = testSSH
+                    newRcon = await RCON.create(sshConfig.ip, rconPort, testSSH, serverFilesDirectory)
+                    request.app.state.rcon = newRcon
+                    await watcher.restart(request.app)
                     return {"detail": "SSH configuration updated successfully."}
                 else:
                     try:
                         await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, encryption.encryptSecret(sshConfig.password)))
-                        global ssh, rcon
-                        ssh = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
-                        await ssh.connect()
-                        rcon = await RCON.create(sshConfig.ip, rconPort, ssh, serverFilesDirectory)
-                        request.app.state.ssh = ssh
+                        newSSH = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
+                        await newSSH.connect()
+                        rcon = await RCON.create(sshConfig.ip, rconPort, newSSH, serverFilesDirectory)
+                        request.app.state.ssh = newSSH
                         request.app.state.rcon = rcon
                         await watcher.restart(request.app)
                         return {"detail": "SSH configuration saved and connected successfully."}
@@ -372,7 +406,7 @@ async def sshConfig(sshConfig: models.sshConfig, request: Request): #perm: setup
                         
             except Exception as e:
                 print(f"Error connecting to SSH server: {str(e)}")
-                raise HTTPException(status_code=400, detail=error.sshConnectFailed)
+                raise HTTPException(status_code=400, detail=error.sshConnectionFailed)
             
         except Exception as e:
             print(f"Error during SSH configuration: {str(e)}")

@@ -1,5 +1,6 @@
 from collections import deque
 import asyncio
+import asyncssh
 
 class LogWatcher:
     def __init__(self):
@@ -14,15 +15,21 @@ class LogWatcher:
 
         if ssh is None:
             return
+        
+        while True:
+            try:
+                async for line in ssh.stream(
+                    f"tail -n 150 -F {server_files_directory}logs/latest.log"
+                ):
+                    if line:
+                        self.buffer.append(line)
 
-        async for line in ssh.stream(
-            f"tail -n 150 -F {server_files_directory}logs/latest.log"
-        ):
-            if line:
-                self.buffer.append(line)
-
-                for websocket in self.clients.copy():
-                    await websocket.send_text(line)
+                        for websocket in self.clients.copy():
+                            await websocket.send_text(line)
+            except (asyncssh.Error, OSError, ConnectionError):
+                await asyncio.sleep(2)
+                continue
+                
 
     async def start(self, app):
         if self.task is None or self.task.done():

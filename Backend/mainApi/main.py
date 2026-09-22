@@ -4,7 +4,6 @@ from services.ssh import SSH
 from services.rcon import RCON
 import os
 from dotenv import load_dotenv
-import re
 from contextlib import asynccontextmanager
 import asyncio
 from pydantic import BaseModel
@@ -68,22 +67,28 @@ async def lifespan(app: FastAPI):
     
     result = await sql.fetchone("SELECT * FROM server")
     if result:
-        ssh = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
-        await ssh.connect()
-        rcon = await RCON.create(ip, rconPort, ssh, serverFilesDirectory)
-        
-        app.state.ssh = ssh
-        app.state.rcon = rcon
+        try:
+            ssh = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
+            await asyncio.wait_for(ssh.connect(), timeout=3)
+            app.state.ssh = ssh
+            rcon = await RCON.create(result[1], rconPort, ssh, serverFilesDirectory)
+            app.state.rcon = rcon
+            
+        except (asyncio.TimeoutError, TimeoutError):
+            print(f"SSH not available")
+            app.state.ssh = None
+            app.state.rcon = None
+
+        except Exception as e:
+            print(f"Startup connection error: {type(e).__name__}: {e}")
+            app.state.ssh = None
+            app.state.rcon = None
 
         await logWatcher.start(app)
         
     
     yield
-    logTask.cancel()
-    try:
-        await logTask
-    except asyncio.CancelledError:
-        pass
+    await logWatcher.stop()
     
 
 secureCookie = False

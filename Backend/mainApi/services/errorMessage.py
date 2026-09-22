@@ -11,6 +11,7 @@ class errorMessage:
         self.noActiveSession = "No active session found. Please log in."
         self.invalidSession = "Session is invalid or expired."
         self.sshNotConfigured = "SSH is not configured"
+        self.sshNotReachable = "SSH is not reachable."
         self.sshConnectionFailed = "SSH connection failed."
         self.sshConfigSaveFailed = "The SSH configuration could not be saved."
         self.sshConfigFailed = "The SSH configuration could not be processed"
@@ -26,5 +27,6 @@ class errorMessage:
         self.userDeletionError = "The user could not be deleted. Please try again later."
         self.invalidPassword = "The password you entered is invalid. Please try again."
         self.userRoleUpdateError = "The user role could not be updated. Please try again later."
+        self.rconError = "The RCON connection could not be established. Please check your configuration."
         
         

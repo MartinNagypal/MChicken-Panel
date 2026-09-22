@@ -52,14 +52,12 @@ The panel supports three user roles.
 | Manage backups | Yes | Yes | No |
 | View backups | Yes | Yes | Yes |
 | View console | Yes | Yes | Yes |
-| Send commands | Yes | Yes* | No |
+| Send commands | Yes | Yes | No |
 | Configure SSH | Yes | No | No |
 | Configure RCON | Yes | No | No |
 | Manage users | Yes | No | No |
 | View users | Yes | Yes | No |
 | Modify users | Yes | No | No |
-
-\* The backend currently allows console commands only for administrators. Although the role configuration grants moderators the `sendCommand` permission, the endpoint additionally requires the `admin` role.
 
 The first registered user is automatically assigned the `admin` role. Additional users can only register if registration is enabled or if an administrator creates them through the user management interface.
 

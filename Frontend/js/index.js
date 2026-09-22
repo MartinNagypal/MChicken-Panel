@@ -2,6 +2,7 @@
 buttonStartStop = document.getElementById('buttonStartStop');
 buttonRestart = document.getElementById('buttonRestart');
 buttonBackup = document.getElementById('buttonBackup');
+let refreshRunning = false;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -127,9 +128,6 @@ async function fetchServerStats() {
     }
 }
 
-fetchServerStatus();
-fetchServerStats();
-fetchServerData();
 
 buttonRestart.addEventListener('click', async() => {
     try {
@@ -186,4 +184,19 @@ async function showInfoScreen(message, success = false) {
     infoScreen.classList.remove("infoScreenVisible");
 }
 
+async function refreshDashboard(){
+    if(refreshRunning == true){
+        return;
+    }
 
+    refreshRunning = true;
+
+    try{
+        Promise.allSettled([fetchServerData(), fetchServerStatus(), fetchServerStats()]);
+    } finally {
+        refreshRunning = false;
+    }
+}
+
+refreshDashboard
+const refreshIntervall = setInterval(refreshDashboard, 5000);
