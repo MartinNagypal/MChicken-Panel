@@ -112,6 +112,12 @@ async function configureServer(){
         }
     }
 
+    await sleep(3000);
+    for(let i = 0; i < attributes.length; i++){
+        attributes[i].classList.remove("mainInputStyleFalse");
+        attributes[i].classList.remove("mainInputStyleTrue");
+    }
+
     if(!attributes[1].value){
         sshPort = 22;
     }

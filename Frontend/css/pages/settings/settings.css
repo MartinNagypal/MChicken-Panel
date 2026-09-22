@@ -246,8 +246,8 @@
 }
 
 .serverConfigButtonsDiv{
-    display: flex;
-    flex-direction: row;
+    display: grid;
     width: 100%;
-    justify-content: space-evenly;
+    grid-template-columns: auto auto auto;
+    gap: 10pt;
 }
