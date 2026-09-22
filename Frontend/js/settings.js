@@ -1,8 +1,4 @@
-const sshIp = document.getElementById("sshIp");
-const sshPort = document.getElementById("sshPort");
-const sshUsername = document.getElementById("sshUsername");
-const sshPassword = document.getElementById("sshPassword");
-const serverSetupTabSSHSubmit = document.getElementById("serverSetupTabSSHSubmit");
+const buttonServerSetupTabConfigureServer = document.getElementById("serverSetupTabConfigureServer");
 const buttonLogoutAllSessions = document.getElementById("buttonLogoutAllSessions");
 const buttonDeleteUserScreenClose = document.getElementById("buttonDeleteUserScreenClose");
 const buttonAddUser = document.getElementById("addUserItem");
@@ -37,6 +33,7 @@ async function checkAuthStatus(){
     }
 }
 
+/*
 serverSetupTabSSHSubmit.addEventListener("click", async () => {
     const ip = sshIp.value;
     let port = sshPort.value;
@@ -83,6 +80,35 @@ serverSetupTabSSHSubmit.addEventListener("click", async () => {
         }
     }
 });
+*/
+
+buttonServerSetupTabConfigureServer.addEventListener("click", async () => {
+    await configureServer();
+});
+
+async function configureServer(){
+    const attributes = []
+    attributes.push(document.getElementById("sshIp")); //0
+    attributes.push(document.getElementById("sshPort")); //1
+    attributes.push(document.getElementById("sshUsername")); //2
+    attributes.push(document.getElementById("sshPassword")); //3
+    attributes.push(document.getElementById("rconPort")); //4
+    attributes.push(document.getElementById("containerName")); //5
+    attributes.push(document.getElementById("dirToServerData")); //6
+    attributes.push(document.getElementById("dirToDC_File")); //7
+    attributes.push(document.getElementById("dirToBackups")); //8
+
+    for(let i = 0; i <= attributes.length; i++){
+        if(!attributes[i].value && i!==1 && i!==4 && i!==8){
+            attributes[i].classList.add("mainInputStyleFalse");
+        }
+        else{
+            attributes[i].classList.remove("mainInputStyleFalse");
+            attributes[i].classList.add("mainInputStyleTrue");
+        }
+    }
+}
+
 
 async function showInfoScreen(message, success = false) {
     const infoScreen = document.getElementById("infoScreen");

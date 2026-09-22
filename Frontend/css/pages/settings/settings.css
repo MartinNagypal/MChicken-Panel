@@ -245,4 +245,9 @@
     gap: 5pt;
 }
 
-
+.serverConfigButtonsDiv{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-evenly;
+}
