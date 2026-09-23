@@ -51,3 +51,6 @@ class LogWatcher:
         async with self.lock:
             await self.stop()
             await self.start(app)
+            
+    async def clearBuffer(self):
+        self.buffer.clear()

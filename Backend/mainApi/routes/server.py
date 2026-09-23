@@ -537,6 +537,10 @@ async def getCurrentConfig(request: Request): #perm: viewServerConfig
     if isValidSession == True:
         result = await sql.fetchone("SELECT * FROM server")
         if result:
+            if not result[9]:
+                dirToBackups = "Empty"
+            else:
+                dirToBackups = result[9]
             return {
                 "ip": result[1],
                 "port": result[2],
@@ -545,7 +549,7 @@ async def getCurrentConfig(request: Request): #perm: viewServerConfig
                 "containerName": result[6],
                 "dirToServerData": result[7],
                 "dirToDC_File": result[8],
-                "dirToBackups": result[8]
+                "dirToBackups": dirToBackups
             }
         else:
             raise HTTPException(status_code=400, detail=error.noServerConfigured)
@@ -664,17 +668,18 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 await sql.execute("UPDATE server SET dirToBackups = ? WHERE ip = ?",(serverData.dirToBackups, result[1],))
                 
             newData = await sql.fetchone("SELECT * FROM server")
-            saveSSH = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
+            saveSSH = SSH(newData[1], newData[2], newData[3], encryption.decryptSecret(newData[4]))
             try:
                 await asyncio.wait_for(saveSSH.connect(), timeout=3)
             except:
                 raise HTTPException(status_code=500, detail=error.sshConnectionFailed)
             
             request.app.state.ssh = saveSSH
-            saveRcon = RCON(result[1], result[2], request.app.state.ssh, result[7])
+            saveRcon = await RCON.create(newData[1], newData[2], request.app.state.ssh, newData[7])
             request.app.state.rcon = saveRcon
-            newServer = SERVER(result[6], result[8], result[7], request.app.state.compose, result[1], result[5], request.app.state.rconPassword, request.app.state.allowRegistration)
+            newServer = SERVER(newData[6], newData[8], newData[7], request.app.state.compose, newData[1], newData[5], request.app.state.rconPassword, request.app.state.allowRegistration)
             request.app.state.server = newServer
+            await watcher.clearBuffer()
             await watcher.restart(request.app)
             
         else:

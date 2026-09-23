@@ -110,6 +110,7 @@ consoleInputSendButton.addEventListener("click", async () => {
 async function sendConsoleInput() {
     const inputField = document.getElementById('consoleInputField');
     const command = inputField.value;
+    inputField.value = " ";
     response = await fetch("http://127.0.0.1:8000/server/sendCommand", {
         method: "POST",
         credentials: "include",
@@ -130,7 +131,6 @@ async function sendConsoleInput() {
         inputField.value = '';
     }
     else{
-        document.getElementById('consoleInputField').value = '';
         await showInfoScreen(result.detail, false);
     }
 }
@@ -146,7 +146,7 @@ socket.onmessage = (event) => {
     const line = document.createElement('div');
     line.textContent = event.data;
     checkLineStatus(event.data, line);
-    if(event.data.includes("RCON") || event.data.includes("Rcon") || event.data.includes("rcon")){
+    if(event.data.includes("RCON Client") || event.data.includes("RCON")){
         line.textContent = " ";
     }
     console.appendChild(line);

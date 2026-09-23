@@ -30,6 +30,7 @@ dockerContainerName = "create"
 serverDirectory = "/mnt/serverData/mcDomiCreate/"
 serverFilesDirectory = "/mnt/serverData/mcDomiCreate/data/"
 dockerComposeFile = "docker-compose.yaml"
+#root@mc:/mnt/serverData/mc170626
 
 sql = SQLITE()
 encryptionKey = os.getenv("ENCRYPTION_KEY").encode()
