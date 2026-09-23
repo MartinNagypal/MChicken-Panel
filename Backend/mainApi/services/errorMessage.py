@@ -33,6 +33,7 @@ class errorMessage:
         self.invalidIp = "IP Adress is Invalid."
         self.invalidSshPort = "SSH Port is invalid."
         self.invalidRconPort = "RCON Port is invalid."
+        self.noServerConfigured = "noServerConfogured"
         
     async def validateIp(self, ip):
         parts = ip.split(".")

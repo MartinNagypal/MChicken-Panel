@@ -511,3 +511,40 @@ async def configureServer(serverData: models.configureServer, request: Request):
             
         except:
             raise HTTPException(status_code=500, detail=error.sshNotReachable)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+        
+@router.get("/server/configure/current")
+async def getCurrentConfig(request: Request): #perm: viewServerConfig
+    auth = request.app.state.auth
+    sql = request.app.state.sql
+    error = request.app.state.error
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "viewServerConfig")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
+    if isValidSession == True:
+        result = await sql.fetchone("SELECT * FROM server WHERE serverId = ?", (1,))
+        if result:
+            return {
+                "ip": result[1],
+                "port": result[2],
+                "username": result[3],
+                "rconPort": result[5],
+                "containerName": result[6],
+                "dirToServerData": result[7],
+                "dirToDC_File": result[8],
+                "dirToBackups": result[8]
+            }
+        else:
+            raise HTTPException(status_code=400, detail=error.noServerConfigured)
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)

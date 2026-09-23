@@ -211,6 +211,35 @@ async function configureServer(){
 
 }
 
+async function getCurrentServerConfig(){
+    response = await fetch('http://127.0.0.1:8000/server/configure/current', {
+        method: 'GET',
+        credentials: 'include'
+    });
+    data = await response.json();
+    if(response.ok){
+        const attributes = []
+        attributes.push(document.getElementById("sshIp")); //0
+        attributes.push(document.getElementById("sshPort")); //1 optional
+        attributes.push(document.getElementById("sshUsername")); //2
+        attributes.push(document.getElementById("rconPort")); //3 optional
+        attributes.push(document.getElementById("containerName")); //4
+        attributes.push(document.getElementById("dirToServerData")); //5
+        attributes.push(document.getElementById("dirToDC_File")); //6
+        attributes.push(document.getElementById("dirToBackups")); //7 optional
+
+        attributes[0].setAttribute("placeholder", data.ip);
+        attributes[1].setAttribute("placeholder", data.port);
+        attributes[2].setAttribute("placeholder", data.username);
+        attributes[3].setAttribute("placeholder", data.rconPort);
+        attributes[4].setAttribute("placeholder", data.containerName);
+        attributes[5].setAttribute("placeholder", data.dirToServerData);
+        attributes[6].setAttribute("placeholder", data.dirToDC_File);
+        attributes[7].setAttribute("placeholder", data.dirToBackups);
+    }    
+}
+
+getCurrentServerConfig();
 
 async function showInfoScreen(message, success = false) {
     const infoScreen = document.getElementById("infoScreen");

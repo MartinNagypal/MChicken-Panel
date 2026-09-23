@@ -10,6 +10,7 @@ class ROLES:
                 "sendCommand": True,
                 "setupSSH": True,
                 "setupRCON": True,
+                "viewServerConfig": True,
                 "manageUsers": True,
                 "viewUsers": True,
                 "modifyUsers": True
@@ -24,6 +25,7 @@ class ROLES:
                 "sendCommand": True,
                 "setupSSH": False,
                 "setupRCON": False,
+                "viewServerConfig": True,
                 "manageUsers": False,
                 "viewUsers": True,
                 "modifyUsers": False
@@ -38,6 +40,7 @@ class ROLES:
                 "sendCommand": False,
                 "setupSSH": False,
                 "setupRCON": False,
+                "viewServerConfig": False,
                 "manageUsers": False,
                 "viewUsers": False,
                 "modifyUsers": False
