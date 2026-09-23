@@ -4,7 +4,7 @@ MChicken Panel is a web-based dashboard for managing Docker-based Minecraft serv
 
 The panel allows users to monitor server status and statistics, execute Minecraft console commands, view live server logs, and manage users and permissions.
 
-![MChicken Panel](Frontend/assets/showCaseIndex.png)
+![MChicken Panel](Frontend/assets/showcaseV2Dashboard.png)
 
 ## Features
 
@@ -60,6 +60,8 @@ The panel supports three user roles.
 | Modify users | Yes | No | No |
 
 The first registered user is automatically assigned the `admin` role. Additional users can only register if registration is enabled or if an administrator creates them through the user management interface.
+
+![MChicken Panel](Frontend/assets/showcaseV2Settings.png)
 
 ## Architecture
 
