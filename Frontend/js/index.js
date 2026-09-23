@@ -78,7 +78,8 @@ async function fetchServerData() {
             document.getElementById('serverInfo').classList.remove('serverInfoHidden');
         }
         else{
-            document.getElementById('serverInfoHeaderName').textContent = "No Server Found";
+            const data = await response.json();
+            document.getElementById('serverInfoHeaderName').textContent = data.detail;
             document.getElementById('serverVersion').textContent = "N/A";
             document.getElementById('serverIp').textContent = "N/A";
             document.getElementById('serverInfo').classList.remove('serverInfoHidden');

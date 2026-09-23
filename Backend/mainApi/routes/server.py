@@ -431,28 +431,31 @@ async def sshReconnect(request:Request):
     isValidSession = isValidSession.get("valid")
     
     if isValidSession == True:
-        if ssh is not None:
-            if await ssh.checkConnection():
-                raise HTTPException(status_code=409, detail=error.sshConnectExists)
-            
-        result = await sql.fetchone("SELECT * FROM server WHERE ip = ?", (ip,))
-        if result:
-            try:
-                newSSH = SSH(result[1], result[2], result[3], result[4])
-                await asyncio.wait_for(newSSH.connect(), timeout=1)
-                request.app.state.ssh = newSSH
-                newRcon = await RCON.create(ip, rconPort, newSSH, serverFilesDirectory)
-                request.app.state.rcon = newRcon
-                await watcher.restart(request.app)
+        try:
+            if ssh is not None:
+                if await ssh.checkConnection():
+                    raise HTTPException(status_code=409, detail=error.sshConnectExists)
                 
-            except(asyncio.TimeoutError, TimeoutError):
-                raise HTTPException(status_code=500, detail=error.sshNotReachable)
-            
-            except Exception as e:
-                print(f'Error establishing new SSH connection: {e}')
-                raise HTTPException(status_code=500, detail=error.sshConnectionFailed)
-        else:
-            raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+            result = await sql.fetchone("SELECT * FROM server WHERE ip = ?", (ip,))
+            if result:
+                try:
+                    newSSH = SSH(result[1], result[2], result[3], result[4])
+                    await asyncio.wait_for(newSSH.connect(), timeout=1)
+                    request.app.state.ssh = newSSH
+                    newRcon = await RCON.create(ip, rconPort, newSSH, serverFilesDirectory)
+                    request.app.state.rcon = newRcon
+                    await watcher.restart(request.app)
+                    
+                except(asyncio.TimeoutError, TimeoutError):
+                    raise HTTPException(status_code=500, detail=error.sshNotReachable)
+                
+                except Exception as e:
+                    print(f'Error establishing new SSH connection: {e}')
+                    raise HTTPException(status_code=500, detail=error.sshConnectionFailed)
+            else:
+                raise HTTPException(status_code=500, detail=error.sshNotConfigured)
+        except:
+            raise HTTPException(status_code=500, detail=error.internalServerError)
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
     
@@ -532,7 +535,7 @@ async def getCurrentConfig(request: Request): #perm: viewServerConfig
         raise HTTPException(status_code=403, detail=error.noPermission)
     
     if isValidSession == True:
-        result = await sql.fetchone("SELECT * FROM server WHERE serverId = ?", (1,))
+        result = await sql.fetchone("SELECT * FROM server")
         if result:
             return {
                 "ip": result[1],
@@ -548,3 +551,132 @@ async def getCurrentConfig(request: Request): #perm: viewServerConfig
             raise HTTPException(status_code=400, detail=error.noServerConfigured)
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
+    
+
+@router.post("/server/configure/delete")
+async def deleteServerConf(request: Request): #perm: setupSSH
+    auth = request.app.state.auth
+    sql = request.app.state.sql
+    encryption = request.app.state.encryption
+    error = request.app.state.error
+    watcher = request.app.state.logWatcher
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "setupSSH")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
+    if isValidSession == True:
+        await sql.execute("DELETE FROM server")
+        request.app.state.ssh = None
+        request.app.state.rcon = None
+        await watcher.stop()
+    else:
+        raise HTTPException(status_code=401, detail=error.invalidSession)
+    
+
+
+@router.post("/server/configure/update")
+async def deleteServerConf(serverData:models.configureServer, request: Request): #perm: setupSSH
+    auth = request.app.state.auth
+    sql = request.app.state.sql
+    encryption = request.app.state.encryption
+    error = request.app.state.error
+    watcher = request.app.state.logWatcher
+    
+    currentSessionToken = request.cookies.get("sessionToken")
+    isValidSession = await auth.verifySession(currentSessionToken)
+    isValidSession = isValidSession.get("valid")
+    
+    role = await auth.getUserRole(currentSessionToken)
+    role = role.get("role")
+    permission = await roles.checkPermission(role, "setupSSH")
+    
+    if not permission:
+        raise HTTPException(status_code=403, detail=error.noPermission)
+    
+    if isValidSession == True:
+        result = await sql.fetchone("SELECT * FROM server")
+        if result:
+            
+            searchIp = result[1]
+            
+            if serverData.sshIp != "none":
+                if not await error.validateIp(serverData.sshIp):
+                    raise HTTPException(status_code=400, detail=error.invalidIp)
+
+                newSSH = SSH(serverData.sshIp, result[2], result[3], result[4])
+                try:
+                    await asyncio.wait_for(newSSH.connect(), timeout=3)
+                except:
+                    raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
+                
+                await sql.execute("UPDATE server SET ip = ? WHERE ip = ?",(serverData.sshIp, result[1],))
+                searchIp = serverData.sshIp
+      
+            if serverData.sshPort != 0:
+                if not await error.validatePort(serverData.sshPort):
+                    raise HTTPException(status_code=400, detail=error.invalidSshPort)
+                
+                newSSH = SSH(result[1], serverData.sshPort, result[3], result[4])
+                try:
+                    await asyncio.wait_for(newSSH.connect(), timeout=3)
+                except:
+                    raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
+                
+                await sql.execute("UPDATE server SET port = ? WHERE ip = ?",(serverData.sshPort, result[1],))
+                
+            if serverData.sshUsername != "none":
+                
+                newSSH = SSH(result[1], result[2], serverData.sshUsername, result[4])
+                try:
+                    await asyncio.wait_for(newSSH.connect(), timeout=3)
+                except:
+                    raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
+                await sql.execute("UPDATE server SET username = ? WHERE ip = ?",(serverData.sshUsername, result[1],))
+                
+            if serverData.sshPassword != "none":
+                newSSH = SSH(result[1], result[2], result[3], serverData.sshPassword)
+                try:
+                    await asyncio.wait_for(newSSH.connect(), timeout=3)
+                except:
+                    raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
+                await sql.execute("UPDATE server SET password = ? WHERE ip = ?",(serverData.sshPassword, result[1],))
+                
+            if serverData.rconPort != 0:
+                await sql.execute("UPDATE server SET rconPort = ? WHERE ip = ?",(serverData.rconPort, result[1],))
+                
+            if serverData.containerName != "none":
+                await sql.execute("UPDATE server SET containerName = ? WHERE ip = ?",(serverData.containerName, result[1],))
+                
+            if serverData.dirToServerData != "none":
+                await sql.execute("UPDATE server SET dirToServerData = ? WHERE ip = ?",(serverData.dirToServerData, result[1],))
+                
+            if serverData.dirToDC_File != "none":
+                await sql.execute("UPDATE server SET dirToDC_File = ? WHERE ip = ?",(serverData.dirToDC_File, result[1],))
+                
+            if serverData.dirToBackups != "none":
+                await sql.execute("UPDATE server SET dirToBackups = ? WHERE ip = ?",(serverData.dirToBackups, result[1],))
+                
+            newData = await sql.fetchone("SELECT * FROM server")
+            saveSSH = SSH(result[1], result[2], result[3], result[4])
+            try:
+                await asyncio.wait_for(saveSSH.connect(), timeout=3)
+            except:
+                raise HTTPException(status_code=500, detail=error.sshConnectionFailed)
+            
+            request.app.state.ssh = saveSSH
+            saveRcon = RCON(result[1], result[2], request.app.state.ssh, result[7])
+            request.app.state.rcon = saveRcon
+            newServer = SERVER(result[6], result[8], result[7], request.app.state.compose, result[1], result[5], request.app.state.rconPassword, request.app.state.allowRegistration)
+            request.app.state.server = newServer
+            await watcher.restart(request.app)
+            
+        else:
+            raise HTTPException(status_code=409, detail=error.nothingToUpdate)

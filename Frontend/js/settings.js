@@ -2,6 +2,8 @@ const buttonServerSetupTabConfigureServer = document.getElementById("serverSetup
 const buttonLogoutAllSessions = document.getElementById("buttonLogoutAllSessions");
 const buttonDeleteUserScreenClose = document.getElementById("buttonDeleteUserScreenClose");
 const buttonAddUser = document.getElementById("addUserItem");
+const buttonServerSetupTabDeleteServer = document.getElementById("serverSetupTabDeleteServer");
+const buttonServerSetupTabUpdateServer = document.getElementById("serverSetupTabUpdateServer");
 let username;
 
 
@@ -85,6 +87,23 @@ serverSetupTabSSHSubmit.addEventListener("click", async () => {
 buttonServerSetupTabConfigureServer.addEventListener("click", async () => {
     await configureServer();
 });
+
+buttonServerSetupTabDeleteServer.addEventListener("click", async () => {
+    const result = await fetch("http://127.0.0.1:8000/server/configure/delete", {
+        method: 'POST',
+        credentials: 'include'
+    })
+    if(result.ok){
+        await showInfoScreen("Server config deleted", true);
+    }
+    else{
+        await showInfoScreen("Error", false);
+    }
+});
+
+buttonServerSetupTabUpdateServer.addEventListener("click", async ()=>{
+    await updateServer();
+})
 
 async function configureServer(){
     const attributes = []
@@ -237,6 +256,144 @@ async function getCurrentServerConfig(){
         attributes[6].setAttribute("placeholder", data.dirToDC_File);
         attributes[7].setAttribute("placeholder", data.dirToBackups);
     }    
+}
+
+
+async function updateServer(){
+    const attributes = [];
+    const sshIp = {
+        element: document.getElementById("sshIp"),
+        value: document.getElementById("sshIp").value,
+        name: "sshIp"
+    };
+    attributes.push(sshIp); //0
+
+    const sshPort = {
+        element: document.getElementById("sshPort"),
+        value: document.getElementById("sshPort").value,
+        name: "sshPort"
+    }
+    attributes.push(sshPort); //1
+
+    const sshUsername = {
+        element: document.getElementById("sshUsername"),
+        value: document.getElementById("sshUsername").value,
+        name: "sshUsername"
+    }
+    attributes.push(sshUsername); //2
+
+    const sshPassword = {
+        element: document.getElementById("sshPassword"),
+        value: document.getElementById("sshPassword").value,
+        name: "sshPassword"
+    }
+    attributes.push(sshPassword); //3
+
+    const rconPort = {
+        element: document.getElementById("rconPort"),
+        value: document.getElementById("rconPort").value,
+        name: "rconPort"
+    }
+    attributes.push(rconPort); //4
+
+    const containerName = {
+        element: document.getElementById("containerName"),
+        value: document.getElementById("containerName").value,
+        name: "containerName"
+    }
+    attributes.push(containerName); //5
+
+    const dirToServerData = {
+        element: document.getElementById("dirToServerData"),
+        value: document.getElementById("dirToServerData").value,
+        name: "dirToServerData"
+    }
+    attributes.push(dirToServerData); //6
+
+    const dirToDC_File = {
+        element: document.getElementById("dirToDC_File"),
+        value: document.getElementById("dirToDC_File").value,
+        name: "dirToDC_File"
+    }
+    attributes.push(dirToDC_File); //7
+
+    const dirToBackups = {
+        element: document.getElementById("dirToBackups"),
+        value: document.getElementById("dirToBackups").value,
+        name: "dirToBackups"
+    }
+    attributes.push(dirToBackups); //8
+
+    if(sshIp.value){
+        if(!validateIPaddress(sshIp.value)){
+            sshIp.element.classList.add("mainInputStyleFalse");
+            await showInfoScreen("Invalid IP Adress.", false);
+            sshIp.element.classList.remove("mainInputStyleFalse");
+            return;
+        }
+    }
+
+    if(sshPort.value){
+        if(!validatePort(sshPort.value)){
+            sshPort.element.classList.add("mainInputStyleFalse");
+            await showInfoScreen("Invalid SSH Port.", false);
+            sshPort.element.classList.remove("mainInputStyleFalse");
+            return;
+        }
+    }
+
+    if(rconPort.value){
+        if(!validatePort(rconPort.value)){
+            rconPort.element.classList.add("mainInputStyleFalse");
+            await showInfoScreen("Invalid SSH Port.", false);
+            rconPort.element.classList.remove("mainInputStyleFalse");
+            return;  
+        }
+    }
+
+
+
+    let nothingToUpdate = true;
+    for(let i = 0; i < attributes.length; i++){
+        if(attributes[i].value){
+            nothingToUpdate = false;
+        }
+        else{
+            if(!attributes[i].value && i !== 1 && i !==4){
+                attributes[i].value = "none";
+            }
+            else{
+                attributes[i].value = 0;
+            }
+            
+        }
+    }
+
+    if(nothingToUpdate){
+        await showInfoScreen("Nothing to update.", false);
+    }
+    else{
+        const body = {};
+        for (const attribute of attributes) {
+            body[attribute.name] = attribute.value;
+        }
+
+        const result = await fetch("http://127.0.0.1:8000/server/configure/update", {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+        if(!result.ok){
+            const data = await result.json();
+            await showInfoScreen(data.detail, false)
+        }
+        else{
+            await showInfoScreen("Server Configuration updated succesfully.", true);
+        }
+    }
 }
 
 getCurrentServerConfig();
@@ -602,5 +759,6 @@ document.addEventListener("keydown", async (event) => {
         deletUserScreen.classList.add("infoScreenPopup");
     }
 });
+
 
 fetchAllUsers();
