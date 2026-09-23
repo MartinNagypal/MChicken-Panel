@@ -439,7 +439,7 @@ async def sshReconnect(request:Request):
             result = await sql.fetchone("SELECT * FROM server WHERE ip = ?", (ip,))
             if result:
                 try:
-                    newSSH = SSH(result[1], result[2], result[3], result[4])
+                    newSSH = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
                     await asyncio.wait_for(newSSH.connect(), timeout=1)
                     request.app.state.ssh = newSSH
                     newRcon = await RCON.create(ip, rconPort, newSSH, serverFilesDirectory)
@@ -509,7 +509,7 @@ async def configureServer(serverData: models.configureServer, request: Request):
             request.app.state.ssh = testSSH
             rcon = await RCON.create(serverData.sshIp, serverData.rconPort, testSSH, serverData.dirToServerData)
             request.app.state.rcon = rcon
-            await sql.execute("INSERT INTO server (ip, port, username, password, rconPort, containerName, dirToServerData, dirToDC_File, dirToBackups) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (serverData.sshIp, serverData.sshPort, serverData.sshUsername, serverData.sshPassword, serverData.rconPort, serverData.containerName, serverData.dirToServerData, serverData.dirToDC_File, dirToBackups))
+            await sql.execute("INSERT INTO server (ip, port, username, password, rconPort, containerName, dirToServerData, dirToDC_File, dirToBackups) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (serverData.sshIp, serverData.sshPort, serverData.sshUsername, encryption.encryptSecret(serverData.sshPassword), serverData.rconPort, serverData.containerName, serverData.dirToServerData, serverData.dirToDC_File, dirToBackups))
             await watcher.restart(request.app)
             
         except:
@@ -611,7 +611,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 if not await error.validateIp(serverData.sshIp):
                     raise HTTPException(status_code=400, detail=error.invalidIp)
 
-                newSSH = SSH(serverData.sshIp, result[2], result[3], result[4])
+                newSSH = SSH(serverData.sshIp, result[2], result[3], encryption.decryptSecret(result[4]))
                 try:
                     await asyncio.wait_for(newSSH.connect(), timeout=3)
                 except:
@@ -624,7 +624,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 if not await error.validatePort(serverData.sshPort):
                     raise HTTPException(status_code=400, detail=error.invalidSshPort)
                 
-                newSSH = SSH(result[1], serverData.sshPort, result[3], result[4])
+                newSSH = SSH(result[1], serverData.sshPort, result[3], encryption.decryptSecret(result[4]))
                 try:
                     await asyncio.wait_for(newSSH.connect(), timeout=3)
                 except:
@@ -634,7 +634,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 
             if serverData.sshUsername != "none":
                 
-                newSSH = SSH(result[1], result[2], serverData.sshUsername, result[4])
+                newSSH = SSH(result[1], result[2], serverData.sshUsername, encryption.decryptSecret(result[4]))
                 try:
                     await asyncio.wait_for(newSSH.connect(), timeout=3)
                 except:
@@ -647,7 +647,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                     await asyncio.wait_for(newSSH.connect(), timeout=3)
                 except:
                     raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
-                await sql.execute("UPDATE server SET password = ? WHERE ip = ?",(serverData.sshPassword, result[1],))
+                await sql.execute("UPDATE server SET password = ? WHERE ip = ?",(encryption.encryptSecret(serverData.sshPassword), result[1],))
                 
             if serverData.rconPort != 0:
                 await sql.execute("UPDATE server SET rconPort = ? WHERE ip = ?",(serverData.rconPort, result[1],))
@@ -665,7 +665,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 await sql.execute("UPDATE server SET dirToBackups = ? WHERE ip = ?",(serverData.dirToBackups, result[1],))
                 
             newData = await sql.fetchone("SELECT * FROM server")
-            saveSSH = SSH(result[1], result[2], result[3], result[4])
+            saveSSH = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
             try:
                 await asyncio.wait_for(saveSSH.connect(), timeout=3)
             except:
