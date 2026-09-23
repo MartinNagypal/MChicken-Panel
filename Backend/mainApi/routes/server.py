@@ -436,7 +436,7 @@ async def sshReconnect(request:Request):
                 if await ssh.checkConnection():
                     raise HTTPException(status_code=409, detail=error.sshConnectExists)
                 
-            result = await sql.fetchone("SELECT * FROM server WHERE ip = ?", (ip,))
+            result = await sql.fetchone("SELECT * FROM server")
             if result:
                 try:
                     newSSH = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
@@ -580,7 +580,6 @@ async def deleteServerConf(request: Request): #perm: setupSSH
     else:
         raise HTTPException(status_code=401, detail=error.invalidSession)
     
-
 
 @router.post("/server/configure/update")
 async def deleteServerConf(serverData:models.configureServer, request: Request): #perm: setupSSH
