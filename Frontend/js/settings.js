@@ -102,9 +102,12 @@ async function configureServer(){
     let rconPort = attributes[4].value;
     let dirToBackups = attributes[8].value;
 
+    let allParametersFilled = true;
+
     for(let i = 0; i < attributes.length; i++){
         if(!attributes[i].value && i!==1 && i!==4 && i!==8){
             attributes[i].classList.add("mainInputStyleFalse");
+            allParametersFilled = false;
         }
         else{
             attributes[i].classList.remove("mainInputStyleFalse");
@@ -112,10 +115,12 @@ async function configureServer(){
         }
     }
 
-    await sleep(3000);
-    for(let i = 0; i < attributes.length; i++){
-        attributes[i].classList.remove("mainInputStyleFalse");
-        attributes[i].classList.remove("mainInputStyleTrue");
+    if(!allParametersFilled){
+        await showInfoScreen("Please fill out all required fields.", false);
+        for(let i = 0; i < attributes.length; i++){
+            attributes[i].classList.remove("mainInputStyleFalse");
+        }
+        return;
     }
 
     if(!attributes[1].value){
@@ -130,31 +135,80 @@ async function configureServer(){
         dirToBackups = "none";
     }
 
-    response = await fetch('http://127.0.0.1:8000/server/configure', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            sshIp: attributes[0].value,
-            sshPort: sshPort,
-            sshUsername: attributes[2].value,
-            sshPassword: attributes[3].value, 
-            rconPort: rconPort,
-            containerName: attributes[5].value,
-            dirToServerData: attributes[6].value,
-            dirToDC_File: attributes[7].value,
-            dirToBackups: dirToBackups
-        })
-    });
-    data = await response.json();
-    if(!response.ok){
-        await showInfoScreen(data.detail, false);
+    //validate IP
+    if(!validateIPaddress(attributes[0].value)){
+        attributes[0].classList.remove("mainInputStyleTrue");
+        attributes[0].classList.add("mainInputStyleFalse");
+
+        for(let i = 0; i < attributes.length; i++){
+            attributes[i].classList.remove("mainInputStyleTrue");
+        }
+
+        return
+    }
+
+    if(!validatePort(sshPort)){
+        attributes[1].classList.remove("mainInputStyleTrue");
+        attributes[1].classList.add("mainInputStyleFalse");
+
+        for(let i = 0; i < attributes.length; i++){
+            attributes[i].classList.remove("mainInputStyleTrue");
+        }
+
+        return
+    }
+
+    if(!validatePort(rconPort)){
+        attributes[4].classList.remove("mainInputStyleTrue");
+        attributes[4].classList.add("mainInputStyleFalse");
+
+        for(let i = 0; i < attributes.length; i++){
+            attributes[i].classList.remove("mainInputStyleTrue");
+        }
+
+        return
+    }
+
+    if(allParametersFilled){
+        response = await fetch('http://127.0.0.1:8000/server/configure', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sshIp: attributes[0].value,
+                sshPort: sshPort,
+                sshUsername: attributes[2].value,
+                sshPassword: attributes[3].value, 
+                rconPort: rconPort,
+                containerName: attributes[5].value,
+                dirToServerData: attributes[6].value,
+                dirToDC_File: attributes[7].value,
+                dirToBackups: dirToBackups
+            })
+        });
+        data = await response.json();
+        if(!response.ok){
+            await showInfoScreen(data.detail, false);
+            for(let i = 0; i < attributes.length; i++){
+                attributes[i].classList.remove("mainInputStyleTrue");
+            }
+        }
+        else{
+            await showInfoScreen("Server succesfully configured.", true);
+            for(let i = 0; i < attributes.length; i++){
+                attributes[i].classList.remove("mainInputStyleTrue");
+            }
+        }
     }
     else{
-        await showInfoScreen("Server succesfully configured.", true)
+        await showInfoScreen("Please fill out all required fields.", false);
+        for(let i = 0; i < attributes.length; i++){
+            attributes[i].classList.remove("mainInputStyleFalse");
+        }
     }
+
 }
 
 
@@ -478,6 +532,14 @@ async function fetchUsername() {
         console.error("Error fetching username:", error);
         throw error;
     }
+}
+
+function validateIPaddress(ipaddress) {
+    return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress);
+}
+
+function validatePort(port) {
+    return /^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5]?[0-9]{1,4})$/.test(port);
 }
 
 buttonLogoutAllSessions.addEventListener("click", async () => {

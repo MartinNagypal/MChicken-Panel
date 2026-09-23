@@ -19,7 +19,7 @@ class LogWatcher:
         while True:
             try:
                 async for line in ssh.stream(
-                    f"tail -n 150 -F {server_files_directory}logs/latest.log"
+                    f"tail -n 200 -F {server_files_directory}logs/latest.log"
                 ):
                     if line:
                         self.buffer.append(line)

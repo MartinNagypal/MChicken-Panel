@@ -30,5 +30,31 @@ class errorMessage:
         self.invalidPassword = "The password you entered is invalid. Please try again."
         self.userRoleUpdateError = "The user role could not be updated. Please try again later."
         self.rconError = "The RCON connection could not be established. Please check your configuration."
+        self.invalidIp = "IP Adress is Invalid."
+        self.invalidSshPort = "SSH Port is invalid."
+        self.invalidRconPort = "RCON Port is invalid."
         
+    async def validateIp(self, ip):
+        parts = ip.split(".")
+        
+        if len(parts) != 4:
+            return False
+
+        for part in parts:
+            if not part.isdigit():
+                return False
+
+            number = int(part)
+
+            if number < 0 or number > 255:
+                return False
+
+        return True
+    
+    async def validatePort(self, port):
+        try:
+            port = int(port)
+            return 1 <= port <= 65535
+        except (ValueError, TypeError):
+            return False
         

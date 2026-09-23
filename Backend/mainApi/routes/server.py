@@ -480,9 +480,18 @@ async def configureServer(serverData: models.configureServer, request: Request):
         result = await sql.fetchone("SELECT * FROM server WHERE ip = ?", (serverData.sshIp,))
         if result:
             raise HTTPException(status_code=401, detail=error.configurationAlreadyExists)
+        
+        if not await error.validateIp(serverData.sshIp):
+            raise HTTPException(status_code=400, detail=error.invalidIp )
+        
+        if not await error.validatePort(serverData.sshPort):
+            raise HTTPException(status_code=400, detail=error.invalidSshPort)
+        
+        if not await error.validatePort(serverData.rconPort):
+            raise HTTPException(status_code=400, detail=error.invalidRconPort)
 
-        testSSH = SSH(serverData.sshIp, serverData.sshPort, serverData.sshUsername, serverData.sshPassword)
         try:
+            testSSH = SSH(serverData.sshIp, serverData.sshPort, serverData.sshUsername, serverData.sshPassword)
             await asyncio.wait_for(testSSH.connect(), timeout=2)
             if not await testSSH.checkConnection():
                 raise HTTPException(status_code=500, detail=error.sshNotReachable)
@@ -500,5 +509,5 @@ async def configureServer(serverData: models.configureServer, request: Request):
             await sql.execute("INSERT INTO server (ip, port, username, password, rconPort, containerName, dirToServerData, dirToDC_File, dirToBackups) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (serverData.sshIp, serverData.sshPort, serverData.sshUsername, serverData.sshPassword, serverData.rconPort, serverData.containerName, serverData.dirToServerData, serverData.dirToDC_File, dirToBackups))
             await watcher.restart(request.app)
             
-        except(asyncio.TimeoutError, TimeoutError):
+        except:
             raise HTTPException(status_code=500, detail=error.sshNotReachable)
