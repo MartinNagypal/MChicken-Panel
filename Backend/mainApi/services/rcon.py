@@ -18,11 +18,12 @@ class RCON:
         self.__client = Client(self.__ip, self.__password, self.__port)
         return self
 
-    async def run(self, command:str):
+    async def run(self, command: str):
         await self.__client.connect()
-        result = await self.__client.command(command)
-        await self.__client.close()
-        return result
+        try:
+            return await self.__client.command(command)
+        finally:
+            await self.__client.close()
     
     async def __getRconPassword(self):
         result = await self.__ssh.runInDir(self.__serverFilesDir, "cat server.properties | grep rcon.password")
@@ -34,3 +35,6 @@ class RCON:
         if(self.__password != rconPassword):
             self.__password = rconPassword
             self.__client = Client(self.__ip, self.__password, self.__port)
+            
+    async def close(self):
+        await self.__client.close()
