@@ -8,6 +8,11 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+const isSmallScreen = window.innerWidth < 1200 || window.innerHeight < 800;
+
+if(isSmallScreen){
+    window.location.href = "/mobile";
+}
 
 async function checkAuthStatus(){
     try{

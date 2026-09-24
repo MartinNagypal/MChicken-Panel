@@ -37,3 +37,8 @@ async def console_page(request: Request):
 async def backups_page(request: Request):
     PAGES_DIR = request.app.state.pagesDir
     return FileResponse(PAGES_DIR / "backups.html")
+
+@router.get("/mobile")
+async def mobile_page(request: Request):
+    pages_dir = request.app.state.pagesDir
+    return FileResponse(pages_dir / "mobile.html")

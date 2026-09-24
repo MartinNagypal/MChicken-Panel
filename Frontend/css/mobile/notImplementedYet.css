@@ -1,0 +1,20 @@
+.notImplementedYet{
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20pt;
+    border: 1.5pt solid var(--border-color);
+    border-radius: 7.5px;
+    background-color: var(--surface-color);
+}
+
+.container{
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+}
