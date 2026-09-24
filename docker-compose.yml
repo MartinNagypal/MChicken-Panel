@@ -1,0 +1,14 @@
+services:
+  mchicken-panel:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ALLOW_REGISTRATION: "false"
+      ENCRYPTION_KEY: "2nSn3F9fk93Jj_BrBFP5JBkwXFogBG8BsG9tuMuhb3o="
+    volumes:
+      - panel_data:/data
+    restart: unless-stopped
+
+volumes:
+  panel_data:
