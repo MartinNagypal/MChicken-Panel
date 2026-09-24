@@ -95,6 +95,8 @@ async def lifespan(app: FastAPI):
         
     
     yield
+    if app.state.ssh is not None:
+        await app.state.ssh.close()
     await logWatcher.stop()
     
 

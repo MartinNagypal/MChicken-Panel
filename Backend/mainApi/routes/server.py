@@ -352,68 +352,6 @@ async def server_logs(websocket: WebSocket): #perm: viewConsole
     except WebSocketDisconnect:
         watcher.clients.discard(websocket)
 
-
-@router.post("/server/sshConfig")
-async def sshConfig(sshConfig: models.sshConfig, request: Request): #perm: setupSSH
-    auth = request.app.state.auth
-    sql = request.app.state.sql
-    encryption = request.app.state.encryption
-    error = request.app.state.error
-    server = request.app.state.server
-    watcher = request.app.state.logWatcher
-    
-    rconPort = await server.getRconPort()
-    serverFilesDirectory = await server.getServerFilesDirectory()
-    
-    currentSessionToken = request.cookies.get("sessionToken")
-    isValidSession = await auth.verifySession(currentSessionToken)
-    isValidSession = isValidSession.get("valid")
-    
-    role = await auth.getUserRole(currentSessionToken)
-    role = role.get("role")
-    permission = await roles.checkPermission(role, "setupSSH")
-    
-    if not permission:
-        raise HTTPException(status_code=403, detail=error.noPermission)
-    
-    if isValidSession == True:
-        try:
-            testSSH = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
-            try:
-                await testSSH.connect()
-                result = await sql.fetchone("SELECT * FROM server WHERE ip = ? AND port = ?", (sshConfig.ip, sshConfig.port))
-                if result:
-                    request.app.state.ssh = testSSH
-                    newRcon = await RCON.create(sshConfig.ip, rconPort, testSSH, serverFilesDirectory)
-                    request.app.state.rcon = newRcon
-                    await watcher.restart(request.app)
-                    await sql.execute("UPDATE server SET username = ?, password = ? WHERE ip = ? AND port = ?", (sshConfig.username, encryption.encryptSecret(sshConfig.password), sshConfig.ip, sshConfig.port))
-                    return {"detail": "SSH configuration updated successfully."}
-                else:
-                    try:
-                        await sql.execute("INSERT INTO server (ip, port, username, password) VALUES (?, ?, ?, ?)", (sshConfig.ip, sshConfig.port, sshConfig.username, encryption.encryptSecret(sshConfig.password)))
-                        newSSH = SSH(sshConfig.ip, sshConfig.port, sshConfig.username, sshConfig.password)
-                        await newSSH.connect()
-                        rcon = await RCON.create(sshConfig.ip, rconPort, newSSH, serverFilesDirectory)
-                        request.app.state.ssh = newSSH
-                        request.app.state.rcon = rcon
-                        await watcher.restart(request.app)
-                        return {"detail": "SSH configuration saved and connected successfully."}
-                    except Exception as e:
-                        print(f"Error saving SSH configuration: {str(e)}")
-                        raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
-                        
-            except Exception as e:
-                print(f"Error connecting to SSH server: {str(e)}")
-                raise HTTPException(status_code=400, detail=error.sshConnectionFailed)
-            
-        except Exception as e:
-            print(f"Error during SSH configuration: {str(e)}")
-            raise HTTPException(status_code=500, detail=error.sshConfigFailed)
-    else:
-        raise HTTPException(status_code=401, detail=error.invalidSession)
-    
-
 @router.get("/server/sshReconnect")
 async def sshReconnect(request:Request):
     auth = request.app.state.auth
@@ -422,6 +360,7 @@ async def sshReconnect(request:Request):
     encryption = request.app.state.encryption
     error = request.app.state.error
     server = request.app.state.server
+    rcon = request.app.state.rcon
     watcher = request.app.state.logWatcher
     
     rconPort = await server.getRconPort()
@@ -443,9 +382,13 @@ async def sshReconnect(request:Request):
                 try:
                     newSSH = SSH(result[1], result[5], result[3], encryption.decryptSecret(result[4]))
                     await asyncio.wait_for(newSSH.connect(), timeout=1)
+                    ssh.close()
                     request.app.state.ssh = newSSH
+                    newSSH.close()
                     newRcon = await RCON.create(ip, rconPort, newSSH, serverFilesDirectory)
+                    rcon.close()
                     request.app.state.rcon = newRcon
+                    newRcon.close()
                     await watcher.restart(request.app)
                     
                 except(asyncio.TimeoutError, TimeoutError):
@@ -509,8 +452,10 @@ async def configureServer(serverData: models.configureServer, request: Request):
             server = SERVER(serverData.containerName, serverData.dirToDC_File, serverData.dirToServerData, request.app.state.compose, serverData.sshIp, serverData.rconPort, request.app.state.allowRegistration)
             request.app.state.server = server
             request.app.state.ssh = testSSH
+            testSSH.close()
             rcon = await RCON.create(serverData.sshIp, serverData.rconPort, testSSH, serverData.dirToServerData)
             request.app.state.rcon = rcon
+            rcon.close()
             await sql.execute("INSERT INTO server (ip, port, username, password, rconPort, containerName, dirToServerData, dirToDC_File, dirToBackups) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (serverData.sshIp, serverData.sshPort, serverData.sshUsername, encryption.encryptSecret(serverData.sshPassword), serverData.rconPort, serverData.containerName, serverData.dirToServerData, serverData.dirToDC_File, dirToBackups))
             await watcher.restart(request.app)
             
@@ -623,6 +568,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                     raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
                 
                 await sql.execute("UPDATE server SET ip = ? WHERE ip = ?",(serverData.sshIp, result[1],))
+                newSSH.close()
                 searchIp = serverData.sshIp
       
             if serverData.sshPort != 0:
@@ -636,6 +582,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                     raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
                 
                 await sql.execute("UPDATE server SET port = ? WHERE ip = ?",(serverData.sshPort, result[1],))
+                newSSH.close()
                 
             if serverData.sshUsername != "none":
                 
@@ -645,6 +592,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 except:
                     raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
                 await sql.execute("UPDATE server SET username = ? WHERE ip = ?",(serverData.sshUsername, result[1],))
+                newSSH.close()
                 
             if serverData.sshPassword != "none":
                 newSSH = SSH(result[1], result[2], result[3], serverData.sshPassword)
@@ -653,6 +601,7 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 except:
                     raise HTTPException(status_code=500, detail=error.sshConfigSaveFailed)
                 await sql.execute("UPDATE server SET password = ? WHERE ip = ?",(encryption.encryptSecret(serverData.sshPassword), result[1],))
+                newSSH.close()
                 
             if serverData.rconPort != 0:
                 await sql.execute("UPDATE server SET rconPort = ? WHERE ip = ?",(serverData.rconPort, result[1],))
@@ -677,8 +626,10 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 raise HTTPException(status_code=500, detail=error.sshConnectionFailed)
             
             request.app.state.ssh = saveSSH
+            saveSSH.close()
             saveRcon = await RCON.create(newData[1], newData[5], request.app.state.ssh, newData[7])
             request.app.state.rcon = saveRcon
+            saveRcon.close()
             newServer = SERVER(newData[6], newData[8], newData[7], request.app.state.compose, newData[1], newData[5], request.app.state.allowRegistration)
             request.app.state.server = newServer
             await watcher.clearBuffer()
