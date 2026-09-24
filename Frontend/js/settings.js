@@ -13,7 +13,7 @@ function sleep(ms) {
 
 async function checkAuthStatus(){
     try{
-        result = await fetch("http://127.0.0.1:8000/verifySession", {
+        result = await fetch("/verifySession", {
             method: "GET",
             credentials: "include",
             headers: {
@@ -65,7 +65,7 @@ serverSetupTabSSHSubmit.addEventListener("click", async () => {
     }
 
     if(ip && port && username && password) {
-        response = await fetch('http://127.0.0.1:8000/server/sshConfig', {
+        response = await fetch('/server/sshConfig', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -89,7 +89,7 @@ buttonServerSetupTabConfigureServer.addEventListener("click", async () => {
 });
 
 buttonServerSetupTabDeleteServer.addEventListener("click", async () => {
-    const result = await fetch("http://127.0.0.1:8000/server/configure/delete", {
+    const result = await fetch("/server/configure/delete", {
         method: 'POST',
         credentials: 'include'
     })
@@ -189,7 +189,7 @@ async function configureServer(){
     }
 
     if(allParametersFilled){
-        response = await fetch('http://127.0.0.1:8000/server/configure', {
+        response = await fetch('/server/configure', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -231,7 +231,7 @@ async function configureServer(){
 }
 
 async function getCurrentServerConfig(){
-    response = await fetch('http://127.0.0.1:8000/server/configure/current', {
+    response = await fetch('/server/configure/current', {
         method: 'GET',
         credentials: 'include'
     });
@@ -378,7 +378,7 @@ async function updateServer(){
             body[attribute.name] = attribute.value;
         }
 
-        const result = await fetch("http://127.0.0.1:8000/server/configure/update", {
+        const result = await fetch("/server/configure/update", {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -414,7 +414,7 @@ async function showInfoScreen(message, success = false) {
 
 async function fetchAllUsers() {
     try {
-        const response = await fetch("http://127.0.0.1:8000/users", {
+        const response = await fetch("/users", {
             method: "GET",
             credentials: "include"
         });
@@ -445,14 +445,14 @@ async function fetchAllUsers() {
                 userItemSpan.appendChild(usernameSpan);
                 userItem.appendChild(userItemSpan);
 
-                const currentUserResponse = await fetch("http://127.0.0.1:8000/users/user/session", {
+                const currentUserResponse = await fetch("/users/user/session", {
                     method: "GET",
                     credentials: "include"
                 });
                 const currentUserData = await currentUserResponse.json();
                 console.log(currentUserData);
 
-                const initiatorRoleResponse = await fetch("http://127.0.0.1:8000/user/role/session", {
+                const initiatorRoleResponse = await fetch("/user/role/session", {
                     method: "GET",
                     credentials: "include"
                 });
@@ -505,7 +505,7 @@ async function fetchAllUsers() {
                         confirmButton.addEventListener("click", async () => {
                             const passwordInput = document.getElementById("confirmRoleChangesPasswordInput");
                             const password = passwordInput.value;
-                            const roleUpdateResult = await fetch("http://127.0.0.1:8000/user/role/update", {
+                            const roleUpdateResult = await fetch("/user/role/update", {
                                 method: "POST",
                                 credentials: "include",
                                 headers: {
@@ -581,7 +581,7 @@ async function fetchAllUsers() {
 
 async function deleteUser(username, password) {
     try {
-        const deleteResponse = await fetch("http://127.0.0.1:8000/user/delete", {
+        const deleteResponse = await fetch("/user/delete", {
             method: "POST",
             credentials: "include",
             headers: {
@@ -657,7 +657,7 @@ buttonAddUser.addEventListener("click", async () => {
             const newRole = roleSelect.value;
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/users/user/create", {
+                const response = await fetch("/users/user/create", {
                     method: "POST",
                     credentials: "include",
                     headers: {
@@ -706,7 +706,7 @@ function validateUsername(username){
 
 async function fetchUsername() {
     try {
-        const response = await fetch("http://127.0.0.1:8000/user/username", {
+        const response = await fetch("/user/username", {
             method: "GET",
             credentials: "include"
         });
@@ -730,7 +730,7 @@ function validatePort(port) {
 
 buttonLogoutAllSessions.addEventListener("click", async () => {
     try {
-        const response = await fetch("http://127.0.0.1:8000/logout/all", {
+        const response = await fetch("/logout/all", {
             method: "POST",
             credentials: "include",
             headers: {

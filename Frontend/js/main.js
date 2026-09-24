@@ -8,9 +8,10 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+
 async function checkAuthStatus(){
     try{
-        result = await fetch("http://127.0.0.1:8000/verifySession", {
+        result = await fetch("/verifySession", {
             method: "GET",
             credentials: "include",
             headers: {
@@ -20,14 +21,14 @@ async function checkAuthStatus(){
         const data = await result.json();
         console.log(data);
         if(!result.ok){
-            window.location.href = "../pages/auth.html";
+            window.location.href = "/auth";
         }
         else{
             await fetchUsername();
         }
     }
     catch (error) {
-        window.location.href = "../pages/auth.html";
+        window.location.href = "/auth";
         console.error("Error checking authentication status:", error);
     }
 }
@@ -43,19 +44,19 @@ checkAuthContinuerly();
 
 
 dashboardButton.addEventListener("click", () => {
-    window.location.href = "index.html";
+    window.location.href = "/dashboard";
 });
 
 consoleButton.addEventListener("click", () => {
-    window.location.href = "console.html";
+    window.location.href = "/console";
 });
 
 backupsButton.addEventListener("click", () => {
-    window.location.href = "backups.html";
+    window.location.href = "/backups";
 });
 
 settingsButton.addEventListener("click", () => {
-    window.location.href = "settings.html";
+    window.location.href = "/settings";
 });
 
 document.addEventListener("keydown", async (event) => {
@@ -65,7 +66,7 @@ document.addEventListener("keydown", async (event) => {
 });
 
 logoutButton.addEventListener("click", async () => {
-    result = await fetch("http://127.0.0.1:8000/logout", {
+    result = await fetch("/logout", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -73,7 +74,7 @@ logoutButton.addEventListener("click", async () => {
         }
     });
     if(result.ok){
-        window.location.href = "../pages/auth.html";
+        window.location.href = "/auth";
     }
 });
 
@@ -92,7 +93,7 @@ async function showInfoScreen(message, success = false) {
 }
 async function fetchUsername() {
     try {
-        const response = await fetch("http://127.0.0.1:8000/user/username", {
+        const response = await fetch("/user/username", {
             method: "GET",
             credentials: "include"
         });

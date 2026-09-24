@@ -10,7 +10,7 @@ function sleep(ms) {
 
 async function fetchServerStatus() {
     try{
-        const response = await fetch('http://127.0.0.1:8000/status', {
+        const response = await fetch('/status', {
             method: 'GET',
             credentials: 'include'
         });
@@ -65,7 +65,7 @@ async function fetchServerStatus() {
 
 async function fetchServerData() {
     try {
-        const response = await fetch('http://127.0.0.1:8000/server/data', {
+        const response = await fetch('/server/data', {
             method: 'GET',
             credentials: 'include'
         });
@@ -97,7 +97,7 @@ async function fetchServerData() {
 
 async function fetchServerStats() {
     try {
-        const response = await fetch('http://127.0.0.1:8000/stats', {
+        const response = await fetch('/stats', {
             method: 'GET',
             credentials: 'include'
         });
@@ -132,7 +132,7 @@ async function fetchServerStats() {
 }
 
 async function sshReconnect(){
-    const response = await fetch('http://127.0.0.1:8000/server/sshReconnect', {
+    const response = await fetch('/server/sshReconnect', {
         method: 'GET',
         credentials: 'include'
     });
@@ -140,12 +140,13 @@ async function sshReconnect(){
 
 buttonRestart.addEventListener('click', async() => {
     try {
-        const response = await fetch('http://127.0.0.1:8000/server/restart', {
+        const response = await fetch('/server/restart', {
             method: 'POST',
             credentials: 'include'
         });
         const data = await response.json();
         if(response.ok){
+            await showInfoScreen("Server is restarting...", true)
             await fetchServerStatus()
         }
         else{
@@ -158,13 +159,14 @@ buttonRestart.addEventListener('click', async() => {
 
 buttonStartStop.addEventListener('click', async() => {
     try {
-        const response = await fetch('http://127.0.0.1:8000/server/startstop', {
+        const response = await fetch('/server/startstop', {
             method: 'POST',
             credentials: 'include'
         });
         const data = await response.json();
-        if(response.ok){
-            await fetchServerStatus()
+        if(response.ok){;
+            await fetchServerStatus();
+            await showInfoScreen(data.message, true);
         }
         else{
             await showInfoScreen(data.detail, false);

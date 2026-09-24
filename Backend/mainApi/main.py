@@ -19,13 +19,14 @@ from services.errorMessage import errorMessage
 from routes.auth import router as routerAuth 
 from routes.user import router as routerUser
 from routes.server import router as routerServer
+from routes.static import router as routerStatic
+
+from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
-ip = os.getenv("SSH_IP")
-rconPort = os.getenv("RCON_PORT")
-rconPassword = os.getenv("RCON_PASSWORD")
 allowRegistration = os.getenv("ALLOW_REGISTRATION", "").lower() == "true"
-
 dockerContainerName = "create"
 serverDirectory = "/mnt/serverData/mcDomiCreate/"
 serverFilesDirectory = "/mnt/serverData/mcDomiCreate/data/"
@@ -71,7 +72,7 @@ async def lifespan(app: FastAPI):
     
     result = await sql.fetchone("SELECT * FROM server")
     if result:
-        server = SERVER(result[6], result[8], result[7], app.state.compose, result[1], result[5], app.state.rconPassword, app.state.allowRegistration)
+        server = SERVER(result[6], result[8], result[7], app.state.compose, result[1], result[5], app.state.allowRegistration)
         app.state.server = server
         try:
             ssh = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
@@ -103,6 +104,8 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(routerAuth)
 app.include_router(routerUser)
 app.include_router(routerServer)
+app.include_router(routerStatic)
+
 app.state.sql = sql
 app.state.auth = auth
 app.state.encryption = encryption
@@ -112,17 +115,27 @@ app.state.rcon = rcon
 app.state.secureCookie = secureCookie
 app.state.allowRegistration = allowRegistration
 app.state.logWatcher = logWatcher
-app.state.rconPassword = rconPassword
 app.state.compose = "docker-compose.yaml"
 app.state.server = None
 app.state.ssh = None
 app.state.rcon = None
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_DIR = PROJECT_ROOT / "Frontend"
+PAGES_DIR = FRONTEND_DIR / "pages"
+
+app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
+app.mount("/css", StaticFiles(directory=FRONTEND_DIR / "css"), name="css")
+app.mount("/js", StaticFiles(directory=FRONTEND_DIR / "js"), name="js")
+
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
+        "http://127.0.0.1:8000",
+        "http://localhost:8000"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -131,3 +144,27 @@ app.add_middleware(
 
 connectedClients: set[WebSocket] = set()
 logBuffer = deque(maxlen=200)
+
+@app.get("/")
+async def index():
+    return FileResponse(PAGES_DIR / "index.html")
+
+@app.get("/dashboard")
+async def dashboard():
+    return FileResponse(PAGES_DIR / "index.html")
+
+@app.get("/auth")
+async def login_page():
+    return FileResponse(PAGES_DIR / "auth.html")
+
+@app.get("/settings")
+async def settings_page():
+    return FileResponse(PAGES_DIR / "settings.html")
+
+@app.get("/console")
+async def console_page():
+    return FileResponse(PAGES_DIR / "console.html")
+
+@app.get("/backups")
+async def backups_page():
+    return FileResponse(PAGES_DIR / "backups.html")

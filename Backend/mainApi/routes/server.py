@@ -101,8 +101,10 @@ async def stats(request: Request): #perm: serverViewStats
 
             cpuUsage = await ssh.run(f'docker stats {dockerContainerName} --no-stream --format "{{{{.CPUPerc}}}}"')
             memUsage = await ssh.run(f'docker stats {dockerContainerName} --no-stream --format "{{{{.MemUsage}}}}"')
-            currentMemUsage = memUsage.stdout.strip().split("/")[0]
-            maxMem = memUsage.stdout.strip().split("/")[1]
+            currentMemUsage = round(float(memUsage.stdout.strip().split("/")[0].split("GiB")[0]),1,)
+            currentMemUsage = f'{currentMemUsage} GB'
+            maxMem = round(float(memUsage.stdout.strip().split("/")[1].split("GiB")[0]),1,)
+            maxMem = f'{maxMem} GB'
             
             uptimeCmd = (
                 f"echo $(( ($(date +%s) - "
@@ -164,11 +166,11 @@ async def serverStartStop(request: Request): #perm: serverStartStop
         try:
             status = await ssh.run(f'docker ps | grep {dockerContainerName}')
             if 'healthy' in status.stdout:
-                await ssh.runInDir(serverDirectory, f'docker stop {dockerContainerName}')
-                return {"message": "Server stop command executed successfully."}
+                await ssh.runInDir(serverDirectory, f'docker compose down')
+                return {"message": "Server is stopping..."}
             else:
-                await ssh.runInDir(serverDirectory, f'docker start {dockerContainerName}')
-                return {"message": "Server start command executed successfully."}
+                await ssh.runInDir(serverDirectory, f'docker compose up -d')
+                return {"message": "Server is starting..."}
         except Exception as e:
             raise HTTPException(status_code=500, detail=error.serverStartStopFailed)
     else:
@@ -439,7 +441,7 @@ async def sshReconnect(request:Request):
             result = await sql.fetchone("SELECT * FROM server")
             if result:
                 try:
-                    newSSH = SSH(result[1], result[2], result[3], encryption.decryptSecret(result[4]))
+                    newSSH = SSH(result[1], result[5], result[3], encryption.decryptSecret(result[4]))
                     await asyncio.wait_for(newSSH.connect(), timeout=1)
                     request.app.state.ssh = newSSH
                     newRcon = await RCON.create(ip, rconPort, newSSH, serverFilesDirectory)
@@ -504,7 +506,7 @@ async def configureServer(serverData: models.configureServer, request: Request):
             else:
                 dirToBackups = serverData.dirToBackups
             
-            server = SERVER(serverData.containerName, serverData.dirToDC_File, serverData.dirToServerData, request.app.state.compose, serverData.sshIp, serverData.rconPort, request.app.state.rconPassword, request.app.state.allowRegistration)
+            server = SERVER(serverData.containerName, serverData.dirToDC_File, serverData.dirToServerData, request.app.state.compose, serverData.sshIp, serverData.rconPort, request.app.state.allowRegistration)
             request.app.state.server = server
             request.app.state.ssh = testSSH
             rcon = await RCON.create(serverData.sshIp, serverData.rconPort, testSSH, serverData.dirToServerData)
@@ -675,9 +677,9 @@ async def deleteServerConf(serverData:models.configureServer, request: Request):
                 raise HTTPException(status_code=500, detail=error.sshConnectionFailed)
             
             request.app.state.ssh = saveSSH
-            saveRcon = await RCON.create(newData[1], newData[2], request.app.state.ssh, newData[7])
+            saveRcon = await RCON.create(newData[1], newData[5], request.app.state.ssh, newData[7])
             request.app.state.rcon = saveRcon
-            newServer = SERVER(newData[6], newData[8], newData[7], request.app.state.compose, newData[1], newData[5], request.app.state.rconPassword, request.app.state.allowRegistration)
+            newServer = SERVER(newData[6], newData[8], newData[7], request.app.state.compose, newData[1], newData[5], request.app.state.allowRegistration)
             request.app.state.server = newServer
             await watcher.clearBuffer()
             await watcher.restart(request.app)

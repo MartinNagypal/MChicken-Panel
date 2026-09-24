@@ -1,12 +1,11 @@
 class SERVER:
-    def __init__(self, dockerContainerName, serverDirectory, serverFilesDirectory, dockerComposeFile, ip, rconPort, rconPassword, allowRegistration):
+    def __init__(self, dockerContainerName, serverDirectory, serverFilesDirectory, dockerComposeFile, ip, rconPort, allowRegistration):
         self.__dockerContainerName = dockerContainerName
         self.__serverDirectory = serverDirectory
         self.__serverFilesDirectory = serverFilesDirectory
         self.__dockerComposeFile = dockerComposeFile
         self.__ip = ip
         self.__rconPort = rconPort
-        self.__rconPassword = rconPassword
         self.__allowRegistration = allowRegistration
 
     async def getDockerContainerName(self):
@@ -26,9 +25,6 @@ class SERVER:
     
     async def getRconPort(self):
         return self.__rconPort
-    
-    async def getRconPassword(self):
-        return self.__rconPassword
     
     async def getAllowRegistration(self):
         return self.__allowRegistration

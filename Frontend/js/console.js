@@ -110,8 +110,8 @@ consoleInputSendButton.addEventListener("click", async () => {
 async function sendConsoleInput() {
     const inputField = document.getElementById('consoleInputField');
     const command = inputField.value;
-    inputField.value = " ";
-    response = await fetch("http://127.0.0.1:8000/server/sendCommand", {
+    inputField.value = ' ';
+    response = await fetch("/server/sendCommand", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -119,6 +119,7 @@ async function sendConsoleInput() {
         },
         body: JSON.stringify({ command })
     });
+
     const result = await response.json()
     if(response.ok){
         const terminal = document.getElementById('consoleContent');
@@ -132,10 +133,14 @@ async function sendConsoleInput() {
     }
     else{
         await showInfoScreen(result.detail, false);
+        inputField.value = '';
     }
 }
 
-let socket = new WebSocket('ws://127.0.0.1:8000/server/logs');
+const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+const socket = new WebSocket(
+    `${wsProtocol}//${window.location.host}/server/logs`
+);
 
 socket.onopen = () => {
     console.log('WebSocket connection established');

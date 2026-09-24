@@ -3,6 +3,8 @@ const authRegisterButton = document.getElementById("authRegisterButton");
 const authConfirmButton = document.getElementById("authConfirmButton");
 
 
+console.log("loaded auth");
+
 checkAuthStatus();
 
 function sleep(ms) {
@@ -40,7 +42,7 @@ async function login(){
     else{
         document.getElementById("usernameInput").classList.remove("authInputError");
         document.getElementById("passwordInput").classList.add("authInputSuccess");
-        result = await fetch("http://127.0.0.1:8000/login", {
+        result = await fetch("/login", {
             method: "POST",
             credentials: "include",
             headers: {
@@ -138,7 +140,7 @@ authConfirmButton.addEventListener("click", async () => {
         document.getElementById("registerConfirmPasswordInput").classList.remove("authInputError");
         document.getElementById("registerConfirmPasswordInput").classList.add("authInputSuccess");
         if(username.length > 0 && password.length > 0){
-            result = await fetch("http://127.0.0.1:8000/register", {
+            result = await fetch("/register", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -166,7 +168,7 @@ authConfirmButton.addEventListener("click", async () => {
 
 async function checkAuthStatus(){
     try{
-        result = await fetch("http://127.0.0.1:8000/verifySession", {
+        result = await fetch("/verifySession", {
             method: "GET",
             credentials: "include",
             headers: {
@@ -178,7 +180,7 @@ async function checkAuthStatus(){
         if(data.valid){
             if(data.valid === true){
                 console.log("Session is valid, redirecting to index.html");
-                window.location.href = "../pages/index.html";
+                window.location.href = "/dashboard";
             }
         }
     }
