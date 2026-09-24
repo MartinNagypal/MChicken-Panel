@@ -123,6 +123,9 @@ app.state.rcon = None
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = PROJECT_ROOT / "Frontend"
 PAGES_DIR = FRONTEND_DIR / "pages"
+app.state.projectRoot = PROJECT_ROOT
+app.state.frontendDir = FRONTEND_DIR
+app.state.pagesDir = PAGES_DIR
 
 app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
 app.mount("/css", StaticFiles(directory=FRONTEND_DIR / "css"), name="css")
@@ -141,30 +144,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-connectedClients: set[WebSocket] = set()
-logBuffer = deque(maxlen=200)
-
-@app.get("/")
-async def index():
-    return FileResponse(PAGES_DIR / "index.html")
-
-@app.get("/dashboard")
-async def dashboard():
-    return FileResponse(PAGES_DIR / "index.html")
-
-@app.get("/auth")
-async def login_page():
-    return FileResponse(PAGES_DIR / "auth.html")
-
-@app.get("/settings")
-async def settings_page():
-    return FileResponse(PAGES_DIR / "settings.html")
-
-@app.get("/console")
-async def console_page():
-    return FileResponse(PAGES_DIR / "console.html")
-
-@app.get("/backups")
-async def backups_page():
-    return FileResponse(PAGES_DIR / "backups.html")
